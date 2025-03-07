@@ -1,14 +1,8 @@
-# usuarios/views.py
-from django.contrib.auth import login
 from django.http import HttpResponse
-from .forms import RegistrationForm
-
-
-from django.http import JsonResponse
 from django.views import View
 from django.shortcuts import get_list_or_404
 from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
+
 import json
 from usuarios.models import Usuario
 from django.shortcuts import render, redirect
@@ -17,7 +11,7 @@ from django.contrib.auth.models import User
 from .forms import RegistrationForm
 
 def index(request):
-    return render(request, 'bases/index.html')
+    return HttpResponse("Hello World")
 
 
 def cadastro(request):
@@ -39,7 +33,9 @@ def cadastro(request):
             return render(request, 'usuarios/cadastro.html', {'form': form})
     else:
         form = RegistrationForm()
-    return render(request, 'usuarios/cadastro.html', {'form': form})
+    return render(request, 'usuarios/cadastro.html', {'form': form}) 
+
+
 
 def login(request):
     if request.method == 'GET':
@@ -57,53 +53,3 @@ def login(request):
         return render(request, 'usuarios/login.html')
 
 
-#### Criando a classe de testes
-
-class UsuarioListView(View):
-    def get(self, request):
-        """Lista todos os usuarios"""
-        usuarios = Usuario.objects.values("id", "primeiro_nome", "ultimo_nome", "email", "username" )
-        return JsonResponse(list(usuarios), safe=False)
-    
-    @method_decorator(csrf_exempt)
-    def post(self, request):
-        """Cria um novo usuario """
-        data = json.loads(request.body)
-        usuario = Usuario.objects.create(
-            primeiro_nome=data["primeiro_nome"],
-            ultimo_nome=data["ultimo_nome"],
-            email=data["email"],
-            username=data["username"],
-            password=data["password"]
-        )
-        return JsonResponse({"id":usuario.id, "message":"Usuário criado com sucesso"}, status=201)
-    
-
-class UsuarioDetailView(View):
-    def get(self, request, pk):
-        # Obtem os detalhes de um salario
-        usuario = get_list_or_404(Usuario, pk=pk)
-        return JsonResponse({
-            "id": usuario.id,
-            "primeiro_nome": usuario.primeiro_nome,
-            "ultimo_nome": usuario.ultimo_nome,
-            "email": usuario.email,
-            "username": usuario.username,
-        })
-    
-    @method_decorator(csrf_exempt)
-    def put(self, request, pk):
-        # Atualiza um usuário
-        usuario = get_list_or_404(usuario, pk=pk)
-        data = json.loads(request.body)
-        usuario.primeiro_nome = data.get("primeiro_nome", usuario.primeiro_nome)
-        usuario.ultimo_nome = data.get("ultimo_nome", usuario.ultimo_nome)
-        usuario.save()
-        return JsonResponse({"message": "Usuario atualizado com suceso"})
-    
-    @method_decorator(csrf_exempt)
-    def delete(self, request, pk):
-        # Exclui um usuario
-        usuario = get_list_or_404(Usuario, pk)
-        usuario.delete()
-        return JsonResponse({"message": "Usuário excluído com sucesso"}, status=204)
