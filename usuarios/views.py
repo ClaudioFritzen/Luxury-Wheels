@@ -1,55 +1,64 @@
-from django.http import HttpResponse
-from django.views import View
-from django.shortcuts import get_list_or_404
-from django.views.decorators.csrf import csrf_exempt
-
-import json
-from usuarios.models import Usuario
 from django.shortcuts import render, redirect
-from django.contrib.auth import login as auth_login, authenticate
-from django.contrib.auth.models import User
-from .forms import RegistrationForm
+from django.contrib.auth import login, authenticate, logout
+from usuarios.models import Usuario
 
+from .forms import RegistrationForm
+from django.contrib import messages
+from django.contrib.messages import constants
+
+
+
+## nossas funções 
 def index(request):
-    return HttpResponse("Hello World")
+    return render(request, 'bases/index.html')
+
 
 
 def cadastro(request):
     if request.method == 'GET':
         return render(request, 'usuarios/cadastro.html')
-    elif request.method == 'POST':
-        form = RegistrationForm(request.POST)  # Recebe os dados do formulário, e os valida
-        if form.is_valid():  # Verifica se o formulário é válido
-            user = form.save(commit=False)  # Salva os dados no banco de dados
-            user.set_password(form.cleaned_data['password'])
-            user.save()
-            print(f"Usuário {user.username} cadastrado com sucesso")
-            auth_login(request, user)  # Loga o usuário automaticamente após o registro
 
-            return redirect('index')  # Redireciona para a página inicial
+    elif request.method == "POST":
+        print("📌 Dados recebidos no formulário:", request.POST)  # 🔥 Debug
+
+        form = RegistrationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Cadastro realizado com sucesso! Você já pode fazer login.")
+            return redirect("login")
         else:
-            print(form.errors)
-            print(f"Formulário inválido")
-            return render(request, 'usuarios/cadastro.html', {'form': form})
+            messages.error(request, "Erro no formulário. Verifique os campos.")
+
     else:
         form = RegistrationForm()
-    return render(request, 'usuarios/cadastro.html', {'form': form}) 
+
+    return render(request, "usuarios/cadastro.html", {"form": form})
 
 
 
 def login(request):
     if request.method == 'GET':
         return render(request, 'usuarios/login.html')
+    
     elif request.method == 'POST':
-        username = request.POST['username']
-        password = request.POST['password']
+        username = request.POST.get('username')
+        password = request.POST.get('password')
         user = authenticate(request, username=username, password=password)
+
         if user is not None:
-            auth_login(request, user)
-            return redirect('index')
+            login(request, user)
+            messages.success(request, f"Bem-vindo(a), {user.username}!")
+            return redirect('carros')
         else:
-            return render(request, 'usuarios/login.html', {'error': 'Username ou senha inválidos.'})
+            messages.error(request, 'Username ou senha inválidos.')
+        
     else:
         return render(request, 'usuarios/login.html')
+
+
+def logout_view(request):
+    logout(request)
+    messages.success(request, "Você saiu da sua conta")
+    return redirect("login")
 
 
