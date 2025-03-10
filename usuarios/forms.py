@@ -1,6 +1,7 @@
 from django import forms
-from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
+
+from .models import Usuario
 from django.contrib.auth.hashers import make_password
 from usuarios.validators import validar_senha  # ✅ Importa a função de validação
 
@@ -9,8 +10,8 @@ class RegistrationForm(forms.ModelForm):
     confirm_password = forms.CharField(widget=forms.PasswordInput(), required=True)
 
     class Meta:
-        model = User
-        fields = ['first_name', 'last_name', 'email', 'username', 'password']
+        model = Usuario
+        fields = ['primeiro_nome', 'ultimo_nome', 'email', 'username', 'password']
 
     def clean_password(self):
         """Valida a senha antes de salvar"""
