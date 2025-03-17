@@ -1,31 +1,50 @@
 {% extends "bases/base.html" %}
 {% load static %}
 
-
 {% block head %}
-
-{% endblock head%}
-
+    <link href="{% static 'usuarios/css/css.css' %}" rel="stylesheet">
+{% endblock head %}
 
 {% block conteudo %}
-    <div class="container">
-        
-        <form action="{% url 'carros'%}">
-            <div class="mb-3">
-            <label for="exampleInputEmail1" class="form-label">Email</label>
-            <input type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
-            <div id="emailHelp" class="form-text">We'll never share your email with anyone else.</div>
-            </div>
-            <div class="mb-3">
-            <label for="exampleInputPassword1" class="form-label">Password</label>
-            <input type="password" class="form-control" id="exampleInputPassword1">
-            </div>
-            <div class="mb-3 form-check">
-            <input type="checkbox" class="form-check-input" id="exampleCheck1">
-            <label class="form-check-label" for="exampleCheck1">Salvar por 5 dias</label>
-            </div>
-            <button type="submit" class="btn btn-primary">Submit</button>
-        </form>
+<br><br>
 
+<div class="container">
+    <h3 class="font-destaque">Login</h3>
+
+    <!-- Exibir as mensagens de erro e sucesso -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} custom-alert">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row">
+        <div class="col-md-4">
+            <!-- Corrigido para método POST -->
+            <form action="{% url 'login' %}" method="POST">
+                {% csrf_token %}
+                
+                <!-- Campo oculto para passar a URL de redirecionamento (next) -->
+                <input type="hidden" name="next" value="{{ request.GET.next }}">
+
+                <div class="mb-3">
+                    <label for="username">Username ou E-mail</label>
+                    <input type="text" class="form-control" id="username" name="username" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="password" class="form-label">Senha</label>
+                    <input type="password" class="form-control" id="password" name="password" required>
+                </div>
+
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="rememberMe" name="rememberMe">
+                    <label class="form-check-label" for="rememberMe">Lembrar de mim por 5 dias</label>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Entrar</button>
+            </form>
+        </div>
     </div>
-{% endblock conteudo%}
+</div>
+{% endblock conteudo %}
