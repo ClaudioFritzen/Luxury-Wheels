@@ -20,7 +20,7 @@ def cadastro(request):
         return render(request, 'usuarios/cadastro.html')
 
     elif request.method == "POST":
-        print("📌 Dados recebidos no formulário:", request.POST)  # 🔥 Debug
+        #print("📌 Dados recebidos no formulário:", request.POST)  # 🔥 Debug
 
         form = RegistrationForm(request.POST)
         if form.is_valid():
@@ -49,11 +49,15 @@ def logar(request):
 
         if user:
             login(request, user)
-            return render(request,'carros/carros.html')
+            
+            # Verificar se existe o parâmetro 'next' na requisição, se não redireciona para 'carros'
+            next_url = request.POST.get('next') or request.GET.get('next') or 'carros'
+            
+            return redirect(next_url)
         else:
-            messages.add_message(request, constants.ERROR,
-                                 "usuario ou senha invalidos")
+            messages.add_message(request, constants.ERROR, "Usuário ou senha inválidos")
             return redirect("login")
+
 
 
 def logout_view(request):
