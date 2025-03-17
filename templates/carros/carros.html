@@ -1,0 +1,50 @@
+{% extends "bases/base.html" %}
+
+{% load static %}
+
+{% block head %}
+    
+    <link href="{% static 'usuarios/css/css.css' %}" rel="stylesheet">
+    <link href="{% static 'carros/css/carro.css' %}" rel="stylesheet">
+{% endblock head %}
+
+{% block conteudo %}
+    <br>
+    <br>
+    <div class="container">
+        <h3 class="font-destaque">Carros</h3>
+        Lista dos Carros
+        {% for carro in carros %}
+            <div class="carro-card">
+                {% if carro.imagem %}
+                    <img class="carro-imagem" src="{{ carro.imagem.url }}" alt="Imagem de {{ carro.marca }} {{ carro.modelo }}">
+                {% else %}
+                    <img class="carro-imagem" src="/media/default-car.jpg" alt="Imagem padrão">
+                {% endif %}
+                
+                <div class="carro-info">
+                    <h2>{{ carro.marca }} {{ carro.modelo }}</h2>
+                    <p><strong>Ano:</strong> {{ carro.ano }}</p>
+                    <p><strong>Preço da diária:</strong> R$ {{ carro.preco_diaria }}</p>
+
+                    <!-- Botão de Alugar -->
+                    {% if carro.disponibilidade %}
+                        <form method="POST" action="{% url 'alugar_carro' carro.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="botao-alugar">Alugar</button>
+                        </form>
+                    {% else %}
+                        <button class="botao-alugar" disabled>Indisponível</button>
+                    {% endif %}
+                </div>
+
+                <!-- Status do carro -->
+                {% if carro.disponibilidade %}
+                    <span class="status disponivel">Disponível</span>
+                {% else %}
+                    <span class="status indisponivel">Indisponível</span>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+{% endblock conteudo %}

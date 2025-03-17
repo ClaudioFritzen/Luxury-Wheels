@@ -2,13 +2,16 @@
 
 {% extends "bases/base.html" %}
 
+{% load static %}
+
 {% block head %}
 <!-- Qualquer conteúdo adicional de head -->
+    <link rel="stylesheet" href="{% static 'usuarios/css/css.css' %}">
 {% endblock %}
 
 {% block conteudo %}
-<h1>Olá, Mundo!</h1>
-<h1>Olá, Mundo!</h1>
-<h1>Olá, Mundo!</h1>
-<p>Bem-vindo à página de usuários.</p>
+    <h1>Olá, Bem vindo!</h1>
+    <h2 color="black">Este é meu projeto final de Python, onde simulares uma empresa onde podemos alugar carros.</h2>
+    <h1>Olá, Mundo!</h1>
+    <p>Bem-vindo à página de usuários.</p>
 {% endblock %}

@@ -1,0 +1,61 @@
+{% extends "bases/base.html" %}
+{% load static %}
+
+{% block head %}
+    <link href="{% static 'usuarios/css/css.css' %}" rel="stylesheet">
+    <script>
+        function formatarData(event) {
+            event.preventDefault(); // Intercepta o envio do formulário
+
+            const dataInicio = new Date(document.getElementById("data_inicio").value);
+            const dataFim = new Date(document.getElementById("data_fim").value);
+
+            // Formatar as datas no formato YYYY-MM-DD
+            const dataInicioFormatada = `${dataInicio.getFullYear()}-${(dataInicio.getMonth() + 1).toString().padStart(2, '0')}-${dataInicio.getDate().toString().padStart(2, '0')}`;
+            const dataFimFormatada = `${dataFim.getFullYear()}-${(dataFim.getMonth() + 1).toString().padStart(2, '0')}-${dataFim.getDate().toString().padStart(2, '0')}`;
+
+            document.getElementById("data_inicio").value = dataInicioFormatada;
+            document.getElementById("data_fim").value = dataFimFormatada;
+
+            // Prints para depuração no console
+            console.log(`Data Início Formatada: ${dataInicioFormatada}`);
+            console.log(`Data Fim Formatada: ${dataFimFormatada}`);
+
+            // Enviar o formulário após a formatação das datas
+            event.target.submit();
+        }
+    </script>
+{% endblock head %}
+
+{% block conteudo %}
+<div class="container mt-5">
+    <div class="card">
+        <div class="row g-0">
+            <div class="col-md-4">
+                <img src="{{ carro.imagem.url }}" class="img-fluid rounded-start" alt="{{ carro.marca }} {{ carro.modelo }}">
+            </div>
+
+            <div class="col-md-8">
+                <div class="card-body">
+                    <h2 class="card-title">{{ carro.marca }} {{ carro.modelo }}</h2>
+                    <p class="card-text"><strong>Preço da Diária:</strong> R$ {{ carro.preco_diaria }}</p>
+
+                    <form method="POST" onsubmit="formatarData(event)">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="data_inicio" class="form-label">Data de Início</label>
+                            <input type="date" id="data_inicio" name="data_inicio" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="data_fim" class="form-label">Data de Fim</label>
+                            <input type="date" id="data_fim" name="data_fim" class="form-control" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Confirmar Aluguel</button>
+                        <a href="{% url 'carros' %}" class="btn btn-secondary">Cancelar</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

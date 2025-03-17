@@ -1,0 +1,58 @@
+{% extends "bases/base.html" %}
+{% load static %}
+
+{% block head %}
+    <link href="{% static 'usuarios/css/css.css' %}" rel="stylesheet">
+    <script>
+        function formatarData(event) {
+            event.preventDefault();
+
+            const dataInicio = new Date(document.getElementById("data_inicio").value);
+            const dataFim = new Date(document.getElementById("data_fim").value);
+
+            const dataInicioFormatada = `${dataInicio.getFullYear()}-${(dataInicio.getMonth() + 1).toString().padStart(2, '0')}-${dataInicio.getDate().toString().padStart(2, '0')}`;
+            const dataFimFormatada = `${dataFim.getFullYear()}-${(dataFim.getMonth() + 1).toString().padStart(2, '0')}-${dataFim.getDate().toString().padStart(2, '0')}`;
+
+            document.getElementById("data_inicio").value = dataInicioFormatada;
+            document.getElementById("data_fim").value = dataFimFormatada;
+
+            console.log(`Data Início Formatada: ${dataInicioFormatada}`);
+            console.log(`Data Fim Formatada: ${dataFimFormatada}`);
+
+            event.target.submit();
+        }
+    </script>
+{% endblock head %}
+
+{% block conteudo %}
+<div class="container mt-5">
+    <div class="card">
+        <div class="row g-0">
+            <div class="col-md-4">
+                <img src="{{ carro.imagem.url }}" class="img-fluid rounded-start" alt="{{ carro.marca }} {{ carro.modelo }}">
+            </div>
+            <div class="col-md-8">
+                <div class="card-body">
+                    <h2 class="card-title">Confirmação de Aluguel</h2>
+                    <p><strong>Carro:</strong> {{ carro.marca }} {{ carro.modelo }}</p>
+                    <p><strong>Ano:</strong> {{ carro.ano }}</p>
+                    <p><strong>Data de Início:</strong> {{ data_inicio }}</p>
+                    <p><strong>Data de Fim:</strong> {{ data_fim }}</p>
+                    <p><strong>Total de dias:</strong> {{ dias }}</p>
+                    <p><strong>Total do Aluguel:</strong> € {{ preco_total }}</p>
+
+                    <form method="POST" onsubmit="formatarData(event)" action=" {% url 'confirmar_aluguel' carro.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" id="data_inicio" name="data_inicio" value="{{ data_inicio }}">
+                        <input type="hidden" id="data_fim" name="data_fim" value="{{ data_fim }}">
+                        <input type="hidden" name="preco_total" value="{{ preco_total }}">
+                        
+                        <button type="submit" class="btn btn-success">Confirmar</button>
+                        <a href="{% url 'carros' %}" class="btn btn-danger">Cancelar</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends "bases/base.html" %}
+{% load static %}
+
+{% block head %}
+    <link href="{% static 'usuarios/css/css.css' %}" rel="stylesheet">
+{% endblock head %}
+
+{% block conteudo %}
+<div class="container mt-5">
+    <h2>Bem-vindo(a), {{ username }}!</h2>  <!-- Mensagem de boas-vindas com o nome do usuário -->
+    <h3>Meus Aluguéis</h3>
+    <ul>
+        {% for aluguel in alugueis %}
+            <li>
+                <strong>{{ aluguel.carro.marca }} {{ aluguel.carro.modelo }}</strong> 
+                ({{ aluguel.data_inicio }} - {{ aluguel.data_fim }}) - 
+                Total: € {{ aluguel.preco_total }}
+            </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}
