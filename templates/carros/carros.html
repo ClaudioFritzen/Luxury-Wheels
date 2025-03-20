@@ -12,6 +12,7 @@
     <br>
     <br>
     <div class="container">
+    
         <h3 class="font-destaque">Carros</h3>
         <h2> Selecione seu veiculo</h2>
 
@@ -58,7 +59,7 @@
 
                     <!-- Botão de Alugar -->
                     {% if carro.disponibilidade %}
-                        <form method="POST" action="{% url 'alugar_carro' carro.id %}">
+                        <form method="GET" action="{% url 'alugar_carro' carro.id %}">
                             {% csrf_token %}
                             <button type="submit" class="botao-alugar">Alugar</button>
                         </form>
