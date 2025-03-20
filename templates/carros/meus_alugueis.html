@@ -28,11 +28,17 @@
                     Total: € {{ aluguel.preco_total }}
 
                     <!-- botao para entregar o veiculo -->
-                    <form method="POST" action="{% url 'entregar_veiculo' aluguel.id %}">
+                    <form method="POST" action="{% url 'entregar_veiculo' aluguel.id %}" style="display: inline;">
                         {% csrf_token %}
 
                         <button type="submit" class="btn btn-primary"> Entregar Veículo </button>
 
+                    </form>
+
+                    <!-- botao para extender prazo do aluguel -->
+                    <form method="GET" action=" {% url 'extender_prazo' aluguel.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-secondary" style="display: inline;"> Estender Prazo </button>
                     </form>
                 </li>
             {% empty %}

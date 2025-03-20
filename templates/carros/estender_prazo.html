@@ -1,0 +1,16 @@
+<form method="POST" action="{% url 'extender_prazo' aluguel.id %}">
+    {% csrf_token %}
+    <h4>Estender Prazo do Aluguel</h4>
+    
+    <!-- Informações atuais do aluguel -->
+    <p><strong>Veículo:</strong> {{ aluguel.carro.marca }} {{ aluguel.carro.modelo }}</p>
+    <p><strong>Data de Início:</strong> {{ aluguel.data_inicio }}</p>
+    <p><strong>Data Final Atual:</strong> {{ aluguel.data_fim }}</p>
+    <p><strong>Valor Diaria:</strong> € {{ aluguel.preco_total }}</p>
+    <p><strong>Preço Total:</strong> € {{ aluguel.preco_total }}</p>
+    
+    <!-- Campo para selecionar a nova data -->
+    <label for="nova_data_fim">Nova Data de Término:</label>
+    <input type="date" id="nova_data_fim" name="nova_data_fim" min="{{ aluguel.data_fim}}" required>
+    <button type="submit" class="btn btn-success mt-2">Confirmar Extensão</button>
+</form>

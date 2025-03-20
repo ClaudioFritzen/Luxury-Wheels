@@ -1,5 +1,5 @@
 from django.db import transaction
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import render, get_object_or_404, redirect, HttpResponse
 from .models import Carro, Aluguel
 from datetime import datetime
 from django.contrib import messages
@@ -112,13 +112,15 @@ def confirmar_aluguel(request, carro_id):
 
                 carro.disponibilidade = False
                 carro.save()
-                print(f"Disponibilidade do carro atualizada: {carro.disponibilidade}")
+                print(
+                    f"Disponibilidade do carro atualizada: {carro.disponibilidade}")
         except Exception as e:
             print(f"Erro durante a transação: {e}")
             messages.error(request, f"Erro ao confirmar o aluguel: {e}")
             return redirect("confirmar_aluguel", carro_id=carro.id)
 
-        messages.success(request, f"Aluguel confirmado! Total: € {float(preco_total):.2f}")
+        messages.success(
+            request, f"Aluguel confirmado! Total: € {float(preco_total):.2f}")
         return redirect("meus_alugueis")
 
     return render(request, "carros/confirmar_aluguel.html", {
@@ -131,8 +133,10 @@ def confirmar_aluguel(request, carro_id):
 
 @login_required
 def meus_alugueis(request):
+
     usuario = request.user  # Obter o usuário autenticado
-    alugueis_ativos = Aluguel.objects.filter(usuario=usuario, status="Confirmado").order_by("-data_inicio")
+    alugueis_ativos = Aluguel.objects.filter(
+        usuario=usuario, status="Confirmado").order_by("-data_inicio")
     alugueis_finalizados = Aluguel.objects.filter(status="finalizado")
     return render(request, "carros/meus_alugueis.html", {
         "alugueis_ativos": alugueis_ativos,
@@ -140,19 +144,56 @@ def meus_alugueis(request):
         "username": usuario.username  # Passar o nome do usuário para o template
     })
 
+
 @login_required
 def entregar_veiculo(request, aluguel_id):
+    if request.method == "GET":
+        return meus_alugueis(request)
 
     if request.method == "POST":
         # buscar o aluguel
         aluguel = get_object_or_404(Aluguel, id=aluguel_id)
         aluguel.status = "finalizado"
         aluguel.save()
-        
+
         # alterar o campo de disponibilidade no Carro para true
         carro = aluguel.carro
         carro.disponibilidade = True
         carro.save()
 
-        messages.success(request, f"O veiculo {aluguel.carro.marca} {aluguel.carro.modelo} foi entregue com sucesso e está disponivel novamente!")
+        messages.success(
+            request, f"O veiculo {aluguel.carro.marca} {aluguel.carro.modelo} foi entregue com sucesso e está disponivel novamente!")
     return redirect("meus_alugueis")
+
+
+@login_required
+def extender_prazo(request, aluguel_id):
+    aluguel = get_object_or_404(Aluguel, id=aluguel_id)
+
+    if request.method == "GET":
+        # renderizar o formulario para ele preencher
+        return render(request, "carros/estender_prazo.html", {"aluguel": aluguel})
+
+    if request.method == "POST":
+        # obter as novas datas: (str)
+        nova_data_fim = request.POST.get("nova_data_fim") 
+        print(f"Data não convertida {nova_data_fim}")
+        print(type(nova_data_fim))
+
+        # validação temos que converter as data do tipo str para datatime
+        if nova_data_fim:
+            # conversao
+            nova_data_fim_convert = datetime.strptime(nova_data_fim, "%Y-%m-%d").date()
+
+            aluguel.data_fim = nova_data_fim_convert
+            print(f"Print da data convertida{nova_data_fim_convert}")
+            print(type(nova_data_fim_convert))
+            aluguel.save()
+            messages.success(
+                request, f"O prazo do aluguel foi estendido para {aluguel.data_fim}")
+
+        else:
+            messages.error(request, "Por Favor! insira uma data valida")
+
+        # nova validação verificar 
+        return redirect("meus_alugueis")
