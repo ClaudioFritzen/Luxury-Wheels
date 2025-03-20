@@ -8,9 +8,41 @@ from django.contrib.auth.decorators import login_required
 
 
 # Create your views here.
+from django.db.models import Q
+
 def lista_carros(request):
+    # Recuperar valores dos filtros enviados pelo usuário
+    filtro_transmissao = request.GET.get('transmissao')
+    filtro_combustivel = request.GET.get('combustivel')
+    filtro_categoria = request.GET.get('categoria')
+    filtro_tipo_veiculos = request.GET.get('tipo_veiculos')
+    filtro_qtd_pessoas = request.GET.get('qtd_pessoas')
+
+    # Iniciar a query base
     carros = Carro.objects.all()
-    return render(request, "carros/carros.html", {"carros": carros})
+
+    # Aplicar os filtros dinamicamente
+    if filtro_transmissao:
+        carros = carros.filter(transmissao=filtro_transmissao)
+    if filtro_combustivel:
+        carros = carros.filter(combustivel=filtro_combustivel)
+    if filtro_categoria:
+        carros = carros.filter(categoria=filtro_categoria)
+    if filtro_tipo_veiculos:
+        carros = carros.filter(tipo_veiculos=filtro_tipo_veiculos)
+    if filtro_qtd_pessoas:
+        carros = carros.filter(qtd_pessoas=filtro_qtd_pessoas)
+
+    # Retornar o contexto com os carros filtrados
+    return render(request, "carros/carros.html", {
+        "carros": carros,
+        "filtro_transmissao": filtro_transmissao,
+        "filtro_combustivel": filtro_combustivel,
+        "filtro_categoria": filtro_categoria,
+        "filtro_tipo_veiculos": filtro_tipo_veiculos,
+        "filtro_qtd_pessoas": filtro_qtd_pessoas,
+    })
+
 
 
 @login_required
@@ -148,9 +180,8 @@ def meus_alugueis(request):
 
     usuario = request.user  # Obter o usuário autenticado
     alugueis_ativos = Aluguel.objects.filter(
-        usuario=usuario, status="Confirmado").order_by("-data_inicio")
+    usuario=usuario, status="Confirmado").order_by("-data_inicio")
     alugueis_finalizados = Aluguel.objects.filter(status="finalizado")
-
     alugueis_cancelados = Aluguel.objects.filter(status="cancelado")
 
     # adicionar o dia de hoje

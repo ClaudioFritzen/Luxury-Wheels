@@ -73,3 +73,27 @@
     background-color: #ccc;
     cursor: not-allowed;
 }
+
+.d-flex {
+    display: flex;
+    flex-wrap: wrap; /* Permite que os campos se ajustem em telas menores */
+    gap: 10px; /* Espaço entre os itens */
+}
+
+.align-items-end {
+    align-items: flex-end; /* Alinha os campos e botões na parte inferior */
+}
+
+.form-select {
+    min-width: 150px; /* Define uma largura mínima para os selects */
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268;
+}

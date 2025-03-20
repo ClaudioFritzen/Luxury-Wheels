@@ -17,33 +17,75 @@
         <h2> Selecione seu veiculo</h2>
 
         <h1>Filtros de Busca</h1>
-        <form action="/buscar" method="GET">
-            <label for="transmissao">Transmissão:</label>
-            <select id="transmissao" name="transmissao">
-                <option value="manual">Manual</option>
-                <option value="automatico">Automático</option>
-                <option value="ambos">Ambos</option>
-            </select>
-            <br><br>
+        <form method="GET" class="d-flex flex-wrap gap-3 align-items-end mb-4">
+            <!-- Filtro de Transmissão -->
+            <div>
+                <label for="transmissao" class="form-label">Transmissão:</label>
+                <select name="transmissao" id="transmissao" class="form-select">
+                    <option value="">Todas</option>
+                    <option value="manual" {% if filtro_transmissao == 'manual' %}selected{% endif %}>Manual</option>
+                    <option value="automatica" {% if filtro_transmissao == 'automatica' %}selected{% endif %}>Automática</option>
+                </select>
+            </div>
 
-            <label for="combustivel">Combustível:</label>
-            <select id="combustivel" name="combustivel">
-                <option value="gasolina">Gasolina</option>
-                <option value="diesel">Diesel</option>
-                <option value="eletrico">Elétrico</option>
-            </select>
-            <br><br>
+            <!-- Filtro de Combustível -->
+            <div>
+                <label for="combustivel" class="form-label">Combustível:</label>
+                <select name="combustivel" id="combustivel" class="form-select">
+                    <option value="">Todos</option>
+                    <option value="gasolina" {% if filtro_combustivel == 'gasolina' %}selected{% endif %}>Gasolina</option>
+                    <option value="diesel" {% if filtro_combustivel == 'diesel' %}selected{% endif %}>Diesel</option>
+                    <option value="eletrico" {% if filtro_combustivel == 'eletrico' %}selected{% endif %}>Elétrico</option>
+                    <option value="hibrido" {% if filtro_combustivel == 'hibrido' %}selected{% endif %}>Híbrido</option>
+                    <option value="gpl" {% if filtro_combustivel == 'gpl' %}selected{% endif %}>GPL</option>
+                </select>
+            </div>
 
-            <label for="cor">Cor:</label>
-            <select id="cor" name="cor">
-                <option value="branco">Branco</option>
-                <option value="preto">Preto</option>
-                <option value="azul">Azul</option>
-            </select>
-            <br><br>
+            <!-- Filtro de Categoria -->
+            <div>
+                <label for="categoria" class="form-label">Categoria:</label>
+                <select name="categoria" id="categoria" class="form-select">
+                    <option value="">Todas</option>
+                    <option value="pequeno" {% if filtro_categoria == 'pequeno' %}selected{% endif %}>Pequeno</option>
+                    <option value="medio" {% if filtro_categoria == 'medio' %}selected{% endif %}>Médio</option>
+                    <option value="grande" {% if filtro_categoria == 'grande' %}selected{% endif %}>Grande</option>
+                    <option value="suv" {% if filtro_categoria == 'suv' %}selected{% endif %}>SUV</option>
+                    <option value="luxo" {% if filtro_categoria == 'luxo' %}selected{% endif %}>Luxo</option>
+                </select>
+            </div>
 
-            <button type="submit">Filtrar</button>
+            <!-- Filtro de Tipo de Veículos -->
+            <div>
+                <label for="tipo_veiculos" class="form-label">Tipo de Veículo:</label>
+                <select name="tipo_veiculos" id="tipo_veiculos" class="form-select">
+                    <option value="">Todos</option>
+                    <option value="carro" {% if filtro_tipo_veiculos == 'carro' %}selected{% endif %}>Carro</option>
+                    <option value="moto" {% if filtro_tipo_veiculos == 'moto' %}selected{% endif %}>Moto</option>
+                    <option value="motorhome" {% if filtro_tipo_veiculos == 'motorhome' %}selected{% endif %}>MotorHome</option>
+                </select>
+            </div>
+
+            <!-- Filtro de Quantidade de Pessoas -->
+            <div>
+                <label for="qtd_pessoas" class="form-label">Qtd. de Pessoas:</label>
+                <select name="qtd_pessoas" id="qtd_pessoas" class="form-select">
+                    <option value="">Todas</option>
+                    <option value="1-4" {% if filtro_qtd_pessoas == '1-4' %}selected{% endif %}>1-4</option>
+                    <option value="5-6" {% if filtro_qtd_pessoas == '5-6' %}selected{% endif %}>5-6</option>
+                    <option value="+7" {% if filtro_qtd_pessoas == '+7' %}selected{% endif %}>+7</option>
+                </select>
+            </div>
+
+            <!-- Botões de Ação -->
+            <div>
+                <button type="submit" class="btn btn-primary">Filtrar</button>
+                <a href="{% url 'carros' %}" class="btn btn-secondary">Limpar Filtros</a>
+            </div>
         </form>
+
+         
+
+
         {% for carro in carros %}
             <div class="carro-card">
                 {% if carro.imagem %}
