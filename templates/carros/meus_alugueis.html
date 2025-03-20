@@ -40,6 +40,15 @@
                         {% csrf_token %}
                         <button type="submit" class="btn btn-secondary" style="display: inline;"> Estender Prazo </button>
                     </form>
+
+                    <!-- Botao de cancelar reserva -->
+                    <!-- Só mostra o botão se a reserva ainda puder ser cancelada -->
+                    {% if aluguel.data_inicio > today %}
+                        <form method="POST" action="{% url 'cancelar_reserva' aluguel.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">Cancelar Reserva</button>
+                        </form>
+                    {% endif %}
                 </li>
             {% empty %}
                 <li> Você não tem aluguéis ativos no momento </li>

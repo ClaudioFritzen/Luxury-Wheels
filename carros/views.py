@@ -2,6 +2,7 @@ from django.db import transaction
 from django.shortcuts import render, get_object_or_404, redirect, HttpResponse
 from .models import Carro, Aluguel
 from datetime import datetime, date
+from django.utils.timezone import now
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 
@@ -142,10 +143,6 @@ def confirmar_aluguel(request, carro_id):
 
     return redirect("carros")
 
-
-    
-
-
 @login_required
 def meus_alugueis(request):
 
@@ -153,12 +150,18 @@ def meus_alugueis(request):
     alugueis_ativos = Aluguel.objects.filter(
         usuario=usuario, status="Confirmado").order_by("-data_inicio")
     alugueis_finalizados = Aluguel.objects.filter(status="finalizado")
+
+    alugueis_cancelados = Aluguel.objects.filter(status="cancelado")
+
+    # adicionar o dia de hoje
+    today = now().date()
     return render(request, "carros/meus_alugueis.html", {
         "alugueis_ativos": alugueis_ativos,
         "alugueis_finalizados": alugueis_finalizados,
-        "username": usuario.username  # Passar o nome do usuário para o template
+        "username": usuario.username,  # Passar o nome do usuário para o template
+        "alugueis_cancelados": alugueis_cancelados,
+        "today":today
     })
-
 
 @login_required
 def entregar_veiculo(request, aluguel_id):
@@ -179,7 +182,6 @@ def entregar_veiculo(request, aluguel_id):
         messages.success(
             request, f"O veiculo {aluguel.carro.marca} {aluguel.carro.modelo} foi entregue com sucesso e está disponivel novamente!")
     return redirect("meus_alugueis")
-
 
 @login_required
 def extender_prazo(request, aluguel_id):
@@ -224,3 +226,31 @@ def extender_prazo(request, aluguel_id):
             messages.error(request, "Por Favor! insira uma data valida")
             return redirect("meus_alugueis")
     return render(request, "carros/estender_prazo.html", {"aluguel": aluguel})
+
+@login_required
+def cancelar_reserva(request, aluguel_id):
+    # buscar id
+    aluguel = get_object_or_404(Aluguel, id=aluguel_id, usuario=request.user)
+
+    # verificar se a reserva pode ser cancelada
+    if aluguel.data_inicio <= now().date():
+        messages.error(request, "Não é possivel cancelar uma reserva que já foi iniciada ou concluída.")
+        return redirect("meus_alugueis")
+    
+    try: #cancelar a reverva
+        aluguel.status = "cancelado"
+        aluguel.save()
+
+        # Tornando o veiculo disponivel novamente
+        carro = aluguel.carro
+        carro.disponibilidade = True
+        carro.save()
+        messages.success(request, f" A reserva do veículo {carro.marca} {carro.modelo} foi cancelada com sucesso!")
+    
+    except Exception as e:
+        #printar os erros 
+        print(e)
+        messages.error(request, f"Erro ao tentar cancelar a reserva: {e}")
+        return redirect("meus_alugueis")
+    
+    return redirect("meus_alugueis")
