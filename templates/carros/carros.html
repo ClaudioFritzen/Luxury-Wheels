@@ -13,7 +13,36 @@
     <br>
     <div class="container">
         <h3 class="font-destaque">Carros</h3>
-        Lista dos Carros
+        <h2> Selecione seu veiculo</h2>
+
+        <h1>Filtros de Busca</h1>
+        <form action="/buscar" method="GET">
+            <label for="transmissao">Transmissão:</label>
+            <select id="transmissao" name="transmissao">
+                <option value="manual">Manual</option>
+                <option value="automatico">Automático</option>
+                <option value="ambos">Ambos</option>
+            </select>
+            <br><br>
+
+            <label for="combustivel">Combustível:</label>
+            <select id="combustivel" name="combustivel">
+                <option value="gasolina">Gasolina</option>
+                <option value="diesel">Diesel</option>
+                <option value="eletrico">Elétrico</option>
+            </select>
+            <br><br>
+
+            <label for="cor">Cor:</label>
+            <select id="cor" name="cor">
+                <option value="branco">Branco</option>
+                <option value="preto">Preto</option>
+                <option value="azul">Azul</option>
+            </select>
+            <br><br>
+
+            <button type="submit">Filtrar</button>
+        </form>
         {% for carro in carros %}
             <div class="carro-card">
                 {% if carro.imagem %}

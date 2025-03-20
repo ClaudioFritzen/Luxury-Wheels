@@ -132,8 +132,27 @@ def confirmar_aluguel(request, carro_id):
 @login_required
 def meus_alugueis(request):
     usuario = request.user  # Obter o usuário autenticado
-    alugueis = Aluguel.objects.filter(usuario=usuario).order_by("-data_inicio")
+    alugueis_ativos = Aluguel.objects.filter(usuario=usuario, status="Confirmado").order_by("-data_inicio")
+    alugueis_finalizados = Aluguel.objects.filter(status="finalizado")
     return render(request, "carros/meus_alugueis.html", {
-        "alugueis": alugueis,
+        "alugueis_ativos": alugueis_ativos,
+        "alugueis_finalizados": alugueis_finalizados,
         "username": usuario.username  # Passar o nome do usuário para o template
     })
+
+@login_required
+def entregar_veiculo(request, aluguel_id):
+
+    if request.method == "POST":
+        # buscar o aluguel
+        aluguel = get_object_or_404(Aluguel, id=aluguel_id)
+        aluguel.status = "finalizado"
+        aluguel.save()
+        
+        # alterar o campo de disponibilidade no Carro para true
+        carro = aluguel.carro
+        carro.disponibilidade = True
+        carro.save()
+
+        messages.success(request, f"O veiculo {aluguel.carro.marca} {aluguel.carro.modelo} foi entregue com sucesso e está disponivel novamente!")
+    return redirect("meus_alugueis")

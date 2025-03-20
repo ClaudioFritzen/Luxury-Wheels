@@ -1,0 +1,46 @@
+Prototipo do figma / jam  https://www.figma.com/board/RtObZOBNatOdIsNsGc4gzb/Projeto-Final?node-id=0-1&t=Oxa0SuKMWJ9r6Hup-1
+
+Objetivo: Criar uma alugadora de carros em um site  
+
+Funções que o usuario pode fazer:
+    Ver todos os carros sem compromisso
+    Cadastrar novo usuario / login / "recuperar senha "
+    Clicar no botao de alugar veiculo / cancelar
+
+    Pode ver todos os seus carros alugados na area do perfil
+    Pode efetuar a reserva de um veiculo deve-se informar a data de inicio e fim do aluguer.
+    Escolher a forma de pagamento  mbway / cartao de debito
+    Pode fazer o cancelamento total da reserva ou data de inicio ou data final
+
+
+Regras de negocios 
+
+    Cadastro de veiculo
+
+        Quem pode fazer -- superusuario no admim
+
+                dados do veiculo para cadastro:
+
+                    marca: 
+                    modelo:
+                    placa do veiculo:
+                    ano do veiculo:
+                    categoria: pequeno / medio / grande / SUV / Luxo / outros
+                    tipo de veiculo: carro / moto / motorhome / outros
+                    transmição : Automatico / Manual
+                    combustivel: Gasoleo / gasolina / eletro / GPL
+                    Preço da diaria: €
+                    Foto:
+                    quantidade de pessoas: 1-4 / 5-6 / mais de 7
+                    
+                    disponibilidade: sim / não
+
+
+                Relacionada a tabela veiculo tem a de inspeção do veiculo
+
+                carro:
+                data_inspecao:
+                observações:
+                status = Aprovado, Reprovado, Pendente
+
+

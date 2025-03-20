@@ -51,6 +51,9 @@ class Aluguel(models.Model):
             ("Em Andamento","Em Andamento"),
             ("Concluido","Concluido"),
             ("Cancelado","Cancelado"),
+            ("Finalizado","Finalizado"),
+            ("Atrasado","Atrasado"),
+            ("Ativo", "Ativo"),
         ],
         default="Confirmado"
     )

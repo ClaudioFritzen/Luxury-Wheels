@@ -6,17 +6,52 @@
 {% endblock head %}
 
 {% block conteudo %}
-<div class="container mt-5">
-    <h2>Bem-vindo(a), {{ username }}!</h2>  <!-- Mensagem de boas-vindas com o nome do usuário -->
-    <h3>Meus Aluguéis</h3>
-    <ul>
-        {% for aluguel in alugueis %}
-            <li>
-                <strong>{{ aluguel.carro.marca }} {{ aluguel.carro.modelo }}</strong> 
-                ({{ aluguel.data_inicio }} - {{ aluguel.data_fim }}) - 
-                Total: € {{ aluguel.preco_total }}
-            </li>
-        {% endfor %}
-    </ul>
-</div>
+    <div class="container mt-5">
+        <h2>Bem-vindo(a), {{ username }}!</h2>  <!-- Mensagem de boas-vindas com o nome do usuário -->
+        <h3>Meus Aluguéis</h3>
+
+            {% if messages %}
+                <div class="alert alert-success" role="alert">
+                    {% for message in messages %}
+                        {{ message }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+        <!-- Alugueis Ativos-->
+        <h4> Alugueis Ativos </h4>
+        <ul>
+            {% for aluguel in alugueis_ativos %}
+                <li>
+                    <strong>{{ aluguel.carro.marca }} {{ aluguel.carro.modelo }}</strong> 
+                    ({{ aluguel.data_inicio }} - {{ aluguel.data_fim }}) - 
+                    Total: € {{ aluguel.preco_total }}
+
+                    <!-- botao para entregar o veiculo -->
+                    <form method="POST" action="{% url 'entregar_veiculo' aluguel.id %}">
+                        {% csrf_token %}
+
+                        <button type="submit" class="btn btn-primary"> Entregar Veículo </button>
+
+                    </form>
+                </li>
+            {% empty %}
+                <li> Você não tem aluguéis ativos no momento </li>
+            {% endfor %}
+        </ul>
+        <!-- Alugueis Finalizados -->
+        <h4> Alugueis Finalizados </h4>
+        <ul>
+            {% for aluguel in alugueis_finalizados %}
+                <li>
+                    <strong>{{ aluguel.carro.marca }} {{ aluguel.carro.modelo }}</strong> 
+                    ({{ aluguel.data_inicio }} - {{ aluguel.data_fim }}) - 
+                    Total: € {{ aluguel.preco_total }}
+                </li>
+            {% empty %}
+                <li> Você não tem aluguéis finalizado no momento </li>
+            {% endfor %}
+        </ul>
+    </div>
+
 {% endblock %}
