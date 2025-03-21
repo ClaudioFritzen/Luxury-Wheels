@@ -73,6 +73,12 @@ class Inspecao(models.Model):
         
     )
 
+    class Meta:
+        permissions = [
+            ("pode_gerenciar_inspecoes", "Pode gerenciar inspeções"),
+        ]
+        
+
     def __str__(self):
         return f"Inspeção {self.id} - {self.carro} - {self.status}"
     

@@ -97,3 +97,16 @@
 .btn-secondary:hover {
     background-color: #5a6268;
 }
+.table {
+    margin-top: 20px;
+    background-color: #f9f9f9;
+}
+
+.btn {
+    margin: 10px 5px;
+}
+
+.text-muted {
+    margin-top: 15px;
+    font-style: italic;
+}

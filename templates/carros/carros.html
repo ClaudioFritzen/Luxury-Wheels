@@ -3,7 +3,6 @@
 {% load static %}
 
 {% block head %}
-    
     <link href="{% static 'usuarios/css/css.css' %}" rel="stylesheet">
     <link href="{% static 'carros/css/carro.css' %}" rel="stylesheet">
 {% endblock head %}
@@ -12,9 +11,8 @@
     <br>
     <br>
     <div class="container">
-    
         <h3 class="font-destaque">Carros</h3>
-        <h2> Selecione seu veiculo</h2>
+        <h2>Selecione seu veículo</h2>
 
         <h1>Filtros de Busca</h1>
         <form method="GET" class="d-flex flex-wrap gap-3 align-items-end mb-4">
@@ -83,9 +81,6 @@
             </div>
         </form>
 
-         
-
-
         {% for carro in carros %}
             <div class="carro-card">
                 {% if carro.imagem %}
@@ -107,6 +102,11 @@
                         </form>
                     {% else %}
                         <button class="botao-alugar" disabled>Indisponível</button>
+                    {% endif %}
+
+                    <!-- Botão para ver Inspeções (somente para usuários com permissão) -->
+                    {% if user_has_permission %}
+                        <a href="{% url 'lista_inspecoes' carro.id %}" class="btn btn-info">Ver Inspeções</a>
                     {% endif %}
                 </div>
 

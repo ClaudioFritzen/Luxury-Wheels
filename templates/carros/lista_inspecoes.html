@@ -1,0 +1,44 @@
+{% extends "bases/base.html" %}
+
+{% load static %}
+
+{% block head %}
+    <link href="{% static 'carros/css/inspecoes.css' %}" rel="stylesheet">
+{% endblock head %}
+
+{% block conteudo %}
+    <div class="container">
+        <h2>Inspeções do Veículo</h2>
+        <h4>{{ carro.marca }} {{ carro.modelo }} (Ano: {{ carro.ano }})</h4>
+
+        <a href="{% url 'carros' %}" class="btn btn-secondary mb-3">Voltar para Lista de Carros</a>
+
+        {% if inspecoes %}
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Data da Inspeção</th>
+                        <th>Status</th>
+                        <th>Observações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for inspecao in inspecoes %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ inspecao.data_inspecao|date:"d/m/Y" }}</td>
+                            <td>{{ inspecao.status }}</td>
+                            <td>{{ inspecao.observacoes|default:"Sem observações" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="text-muted">Não há inspeções cadastradas para este veículo.</p>
+        {% endif %}
+
+        <!-- Botão para adicionar nova inspeção -->
+        <a href="{% url 'nova_inspecao' carro.id %}" class="btn btn-primary">Adicionar Nova Inspeção</a>
+    </div>
+{% endblock conteudo %}
