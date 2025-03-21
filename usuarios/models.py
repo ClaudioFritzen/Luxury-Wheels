@@ -1,7 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
-from django.core.exceptions import ValidationError
-from django.contrib.auth.hashers import make_password
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 
 class UsuarioManager(BaseUserManager):
     def create_user(self, username, email, password=None):
@@ -21,10 +19,15 @@ class UsuarioManager(BaseUserManager):
     def create_superuser(self, username, email, password):
         user = self.create_user(username, email, password)
         user.is_admin = True
+        user.is_superuser = True  # 🔹 Necessário para superusuários no Django Admin
+        user.is_staff = True  # 🔹 Adicione essa linha!
         user.save(using=self._db)
         return user
 
-class Usuario(AbstractBaseUser):  # 🔹 Agora ele herda de AbstractBaseUser
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.db import models
+
+class Usuario(AbstractBaseUser, PermissionsMixin):
     primeiro_nome = models.CharField(max_length=50)
     ultimo_nome = models.CharField(max_length=50)
     email = models.EmailField(unique=True)
@@ -32,8 +35,9 @@ class Usuario(AbstractBaseUser):  # 🔹 Agora ele herda de AbstractBaseUser
     data_criacao = models.DateTimeField(auto_now_add=True)
     data_atualizacao = models.DateTimeField(auto_now=True)
 
-    is_active = models.BooleanField(default=True)  # 🔹 Permite login
-    is_admin = models.BooleanField(default=False)  # 🔹 Para futuros admins
+    is_active = models.BooleanField(default=True)  
+    is_staff = models.BooleanField(default=False)  # 🔹 Tem que ser um BooleanField
+    is_admin = models.BooleanField(default=False)  
 
     objects = UsuarioManager()
 
@@ -44,11 +48,16 @@ class Usuario(AbstractBaseUser):  # 🔹 Agora ele herda de AbstractBaseUser
         return self.username
 
     def has_perm(self, perm, obj=None):
-        return True
+        # Admins têm todas as permissões
+        if self.is_admin:
+            return True
+        # O PermissionsMixin verifica as permissões padrão
+        return super().has_perm(perm, obj)
 
     def has_module_perms(self, app_label):
-        return True
+        # Admins têm acesso total a módulos
+        if self.is_admin:
+            return True
+        # O PermissionsMixin verifica os módulos
+        return super().has_module_perms(app_label)
 
-    @property
-    def is_staff(self):
-        return self.is_admin
