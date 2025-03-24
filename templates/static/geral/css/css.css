@@ -4,3 +4,13 @@ body {
     background-position: center center;
     background-repeat: no-repeat;
 }
+
+.list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+.list-item h5 {
+    margin: 0;
+}

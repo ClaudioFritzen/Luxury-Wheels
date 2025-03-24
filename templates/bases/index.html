@@ -9,9 +9,78 @@
     <link rel="stylesheet" href="{% static 'usuarios/css/css.css' %}">
 {% endblock %}
 
+
 {% block conteudo %}
-    <h1>Olá, Bem vindo!</h1>
-    <h2 color="black">Este é meu projeto final de Python, onde simulares uma empresa onde podemos alugar carros.</h2>
-    <h1>Olá, Mundo!</h1>
-    <p>Bem-vindo à página de usuários.</p>
+<div class="card">
+    <div class="card-header">
+        <h1>Bem-vindo ao meu projeto final de Python </h1>
+
+        </div>
+    <div class="card-body">
+        <h5 class="card-title">Olá, Mundo!</h5>
+        <p class="card-text">Explore as funcionalidades disponíveis para os usuários comum aqui.</p>
+
+        
+        <a href="{% url 'meus_alugueis' %}" class="btn btn-success">Ver Carros</a>
+        <a href="{% url 'carros' %}" class="btn btn-success">Ver Carros</a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <h3 class="card-header">Funcionalidades para usuarios comum </h3>
+            <div class="card-body">
+            <ol>
+                <li class="list-item">
+                    <h5>Criar Cadastro / Login</h5>
+                    <button class="btn btn-primary">Ação</button>
+                </li>
+                <li class="list-item">
+                    <h5>Visualizar todos os veículos da frota</h5>
+                    <button class="btn btn-primary">Ação</button>
+                </li>
+                <li class="list-item">
+                    <h5>Fazer a reserva de um veículo</h5>
+                    <button class="btn btn-primary">Ação</button>
+                </li>
+                <li class="list-item">
+                    <h5>Estender o prazo</h5>
+                    <button class="btn btn-primary">Ação</button>
+                </li>
+                <li class="list-item">
+                    <h5>Fazer o cancelamento do carro antes da data inicial</h5>
+                    <button class="btn btn-primary">Ação</button>
+                </li>
+                <li class="list-item">
+                    <h5>Visualizar seu histórico de reserva</h5>
+                    <button class="btn btn-primary">Ação</button>
+                </li>
+                <li class="list-item">
+                    <h5>Logout</h5>
+                    <button class="btn btn-primary">Sair</button>
+                </li>
+            </ol>
+            </div>
+        </div>
+    </div>
+
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <h3 class="card-header">Funcionalidades para SUPER USUARIOS</h3>
+            <div class="card-body">
+                <h5 class="card-title">Gerenciamento da frota</h5>
+                <h5 class="card-title">Marcar as inspeções dos veiculos | botao monstrado no site</h5>
+                <h5 class="card-title">Retatórios dos veiculos que estão indisponiveis</h5>
+                <h5 class="card-title">Carros em  Luxuoso</h5>
+                <h5 class="card-title">SUV Luxuoso</h5>
+                <p class="card-text">Para quem busca conforto e espaço.</p>
+                <a href="#" class="btn btn-primary">Saiba Mais</a>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}

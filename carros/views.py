@@ -5,6 +5,8 @@ from django.utils.timezone import now
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from .forms import InspecaoForm
+from .utils import calcular_dias_aluguel
+
 
 # Create your views here.
 
@@ -85,7 +87,7 @@ def alugar_carro(request, carro_id):
                 data_inicio = datetime.strptime(data_inicio_str, "%B %d, %Y").date()
                 data_fim = datetime.strptime(data_fim_str, "%B %d, %Y").date()
 
-            print(f"Data início convertida: {data_inicio}, Data fim convertida: {data_fim}")
+            print(f"Data início convertida: {data_inicio}, TIPO ANTES {type(data_inicio)}, Data fim convertida: {data_fim}, TIPO depois {type(data_fim)}")
 
             if data_inicio < date.today():
                 messages.error(request, "A data de início não pode estar no passado.")
@@ -95,8 +97,10 @@ def alugar_carro(request, carro_id):
                 messages.error(request, "A data de término deve ser posterior à data de início.")
                 return redirect("alugar_carro", carro_id=carro.id)
 
-            dias = (data_fim - data_inicio).days + 1
-            preco_total = dias * carro.preco_diaria
+            # Usando a funcao no utils.py para calcular os dias
+            dias = calcular_dias_aluguel(data_inicio, data_fim)
+            print(f"Dias calculados: {dias}")
+            preco_total = carro.preco_diaria * dias
 
             return render(request, "carros/confirmar_aluguel.html", {
                 "carro": carro,
@@ -106,9 +110,9 @@ def alugar_carro(request, carro_id):
                 "dias": dias
             })
 
-        except ValueError as e:
+        except ValueError as ve:
             messages.error(request, "Formato de data inválido. Use o formato YYYY-MM-DD.")
-            print(f"Erro ao converter datas: {e}")
+            print(f"Erro ao converter datas: {ve}")
             return redirect("alugar_carro", carro_id=carro.id)
 
 
@@ -156,11 +160,17 @@ def confirmar_aluguel(request, carro_id):
                 messages.error(request, "A data de término deve ser posterior à data de início.")
                 return redirect("alugar_carro", carro_id=carro.id)
 
-            # Calcular o preço total
-            if not preco_total:
-                dias = (data_fim - data_inicio).days
-                preco_total = carro.preco_diaria * dias
+            # calcular os dias e preço total usando a função do utils.py
+            dias = calcular_dias_aluguel(data_inicio, data_fim)
+            print(f"Dias calculados: dentro do try {dias}")
+            preco_total = carro.preco_diaria * dias
+            print(f"Preço total calculado: dentro do try {preco_total}")
 
+            # verificar se o carro está disponivel
+            if not carro.disponibilidade:
+                messages.error(request, "O carro selecionado não está disponível para aluguel.")
+                return redirect("carros", carro_id=carro.id)
+            
             aluguel = Aluguel.objects.create(
                 usuario=request.user,
                 carro=carro,
@@ -172,7 +182,8 @@ def confirmar_aluguel(request, carro_id):
             carro.disponibilidade = False
             carro.save()
 
-            messages.success(request, f"Você alugou o carro {carro.marca} {carro.modelo} com sucesso!")
+            messages.success(request, f"Você alugou o carro {carro.marca} {carro.modelo} para {dias} dias com sucesso! Total: €{preco_total:.2f}.")
+            
             return redirect("meus_alugueis")
 
         except ValueError as e:
@@ -230,45 +241,57 @@ def entregar_veiculo(request, aluguel_id):
 def extender_prazo(request, aluguel_id):
     aluguel = get_object_or_404(Aluguel, id=aluguel_id)
 
+
     if request.method == "GET":
-        # renderizar o formulario para ele preencher
-        return render(request, "carros/estender_prazo.html", {"aluguel": aluguel})
+        # Renderizar o formulário para preencher
+        carro = aluguel.carro  # Para obter o carro
+        return render(request, "carros/estender_prazo.html", {"aluguel": aluguel, "carro": carro})
 
     if request.method == "POST":
-        # obter as novas datas: (str)
+        carro = aluguel.carro
+        # Obter a nova data como string
         nova_data_fim_str = request.POST.get("nova_data_fim")
-        print(f"Data não convertida {nova_data_fim_str}")
-        print(type(nova_data_fim_str))
+        print(f"Data não convertida: {nova_data_fim_str}, Tipo: {type(nova_data_fim_str)}")
 
-        # validação para garantir que o carro pertence ao usuario
+        # Validação: Verificar se o aluguel pertence ao usuário logado
         if aluguel.usuario != request.user:
-            messages.error(
-                request, "Você não tem permissão para alterar este aluguel")
+            messages.error(request, "Você não tem permissão para alterar este aluguel.")
             return redirect("meus_alugueis")
 
-        try:  # validação temos que converter as data do tipo str para datatime
-            nova_data_fim_convert = datetime.strptime(
-                nova_data_fim_str, "%Y-%m-%d").date()
-            aluguel.data_fim = nova_data_fim_convert  # datetime.date
-            print(f"Data no formato DATETIME {nova_data_fim_convert}")
+        try:
+            # Converter a nova data para datetime.date
+            nova_data_fim = datetime.strptime(nova_data_fim_str, "%Y-%m-%d").date()
+            print(f"Data convertida: {nova_data_fim}, Tipo: {type(nova_data_fim)}")
 
-            # Validação: verificar se a nova data é maior que a data final atual
-            if nova_data_fim_convert <= aluguel.data_fim:
+            # Validação: A nova data deve ser maior que a data final atual
+            if nova_data_fim <= aluguel.data_fim:
                 messages.error(
-                    request, f"A nova data de término deve ser posterior a data final atual {aluguel.data_fim}")
+                    request, f"A nova data de término deve ser posterior à data final atual ({aluguel.data_fim})."
+                )
                 return redirect("meus_alugueis")
 
-            # Atualizar os dados no db
-            aluguel.data_fim = nova_data_fim_convert
-            aluguel.save()
-            messages.success(
-                request, f"O prazo do aluguel foi estendido para {aluguel.data_fim}!")
-        except:
+            # Calcular os dias adicionais ANTES de atualizar a data do aluguel
+            dias_adicionais = calcular_dias_aluguel(aluguel.data_fim, nova_data_fim)
 
-            # nova validação verificar
-            messages.error(request, "Por Favor! insira uma data valida")
+            valor_adicional = dias_adicionais * aluguel.carro.preco_diaria
+            
+            # Atualizar o preço total e a nova data no banco de dados
+            aluguel.preco_total += valor_adicional
+            aluguel.data_fim = nova_data_fim
+            aluguel.save()
+
+            # Mensagem de sucesso
+            messages.success(
+                request,
+                f"O prazo do aluguel foi estendido para {aluguel.data_fim} com um custo adicional de €{valor_adicional:.2f}."
+            )
+        except ValueError:
+            # Erro na conversão de data
+            messages.error(request, "Por favor, insira uma data válida.")
             return redirect("meus_alugueis")
+
     return render(request, "carros/estender_prazo.html", {"aluguel": aluguel})
+
 
 @login_required
 def cancelar_reserva(request, aluguel_id):

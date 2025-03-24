@@ -4,6 +4,8 @@ from django.utils import timezone
 # importando nosso usuario do app usuarios
 from usuarios.models import Usuario
 
+from .utils import calcular_dias_aluguel
+
 
 # Create your models here.
 class Carro(models.Model):
@@ -105,9 +107,8 @@ class Aluguel(models.Model):
     )
 
     def calcula_preco_total(self):
-
         """Calculando o preço do tempo do veiclulo"""
-        dias = (self.data_fim - self.data_inicio).days
+        dias = calcular_dias_aluguel(self.data_inicio, self.data_fim)
         return self.carro.preco_diaria * dias if dias > 0 else self.carro.preco_diaria
     
     def save(self, *args, **kwargs):
