@@ -74,6 +74,18 @@
                 </select>
             </div>
 
+            <!-- Filtro de Preço da Diária -->
+            <div class="filter-container">
+                <label for="preco_diaria" class="form-label">Filtrar por Diária:</label>
+                <select name="preco_diaria" id="preco_diaria" class="form-select">
+                    <option value="">Todas as Diárias</option>
+                    <option value="0-50" {% if preco_diaria == '0-50' %}selected{% endif %}>Até 50</option>
+                    <option value="51-100" {% if preco_diaria == '51-100' %}selected{% endif %}>51 a 100</option>
+                    <option value="101-200" {% if preco_diaria == '101-200' %}selected{% endif %}>101 a 200</option>
+                    <option value="201+" {% if preco_diaria == '201+' %}selected{% endif %}>Acima de 200</option>
+                </select>
+            </div>
+
             <!-- Botões de Ação -->
             <div>
                 <button type="submit" class="btn btn-primary">Filtrar</button>

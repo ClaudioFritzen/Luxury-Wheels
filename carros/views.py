@@ -7,7 +7,6 @@ from django.contrib.auth.decorators import login_required
 from .forms import InspecaoForm
 
 # Create your views here.
-from django.db.models import Q
 
 def lista_carros(request):
     # Recuperar valores dos filtros enviados pelo usuário
@@ -16,6 +15,7 @@ def lista_carros(request):
     filtro_categoria = request.GET.get('categoria')
     filtro_tipo_veiculos = request.GET.get('tipo_veiculos')
     filtro_qtd_pessoas = request.GET.get('qtd_pessoas')
+    filtro_valor_diaria = request.GET.get('preco_diaria')
 
     # Iniciar a query base
     carros = Carro.objects.all()
@@ -33,6 +33,15 @@ def lista_carros(request):
     if filtro_qtd_pessoas:
         carros = carros.filter(qtd_pessoas=filtro_qtd_pessoas)
 
+    #<!-- Filtro de valor da diária -->
+    if filtro_valor_diaria:
+        if "-" in filtro_valor_diaria:
+            min_valor, max_valor = filtro_valor_diaria.split("-")
+            carros = carros.filter(preco_diaria__gte=min_valor, preco_diaria__lte=max_valor)
+
+        elif "+" in filtro_valor_diaria:
+            min_valor = filtro_valor_diaria.replace("+", "")
+            carros = carros.filter(preco_diaria__gte=min_valor)
     # Retornar o contexto com os carros filtrados
     return render(request, "carros/carros.html", {
         "carros": carros,
@@ -42,6 +51,8 @@ def lista_carros(request):
         "filtro_tipo_veiculos": filtro_tipo_veiculos,
         "filtro_qtd_pessoas": filtro_qtd_pessoas,
         'user_has_permission': user_has_permission,
+        'filtro_valor_diaria': filtro_valor_diaria,
+
     })
 
 
