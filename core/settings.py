@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     #meus apps
     'usuarios',
     'carros',
+    'pagamentos',
 ]
 
 MIDDLEWARE = [
@@ -150,3 +151,8 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# integracao com stripe
+STRIPE_PUBLIC_KEY = os.getenv('STRIPE_PUBLIC_KEY')
+STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY')
