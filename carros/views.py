@@ -1,3 +1,4 @@
+from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect, HttpResponse
 from .models import Carro, Aluguel, Inspecao
 from datetime import datetime, date
@@ -5,8 +6,11 @@ from django.utils.timezone import now
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from .forms import InspecaoForm
-from .utils import calcular_dias_aluguel
-
+from .utils import calcular_dias_aluguel, parse_data
+from pagamentos.models import Transacao
+from django.conf import settings
+import stripe
+from django.urls import reverse
 
 # Create your views here.
 
@@ -58,10 +62,10 @@ def lista_carros(request):
     })
 
 
-
 @login_required
 def alugar_carro(request, carro_id):
     carro = get_object_or_404(Carro, id=carro_id)
+    aluguel = Aluguel.objects.filter(carro=carro, usuario=request.user).first()
 
     if request.method == "GET":
         return render(request, "carros/alugar.html", {"carro": carro})
@@ -79,15 +83,10 @@ def alugar_carro(request, carro_id):
             return redirect("alugar_carro", carro_id=carro.id)
 
         try:
-            # Converter as datas (com suporte a múltiplos formatos)
-            try:
-                data_inicio = datetime.strptime(data_inicio_str, "%Y-%m-%d").date()
-                data_fim = datetime.strptime(data_fim_str, "%Y-%m-%d").date()
-            except ValueError:
-                data_inicio = datetime.strptime(data_inicio_str, "%B %d, %Y").date()
-                data_fim = datetime.strptime(data_fim_str, "%B %d, %Y").date()
-
-            print(f"Data início convertida: {data_inicio}, TIPO ANTES {type(data_inicio)}, Data fim convertida: {data_fim}, TIPO depois {type(data_fim)}")
+            # Converter datas usando nossa função parse_data no utils.py
+            data_inicio = parse_data(data_inicio_str)
+            data_fim = parse_data(data_fim_str)
+            print(f"Data início convertida: {data_inicio}, TIPO {type(data_inicio)}, Data fim convertida: {data_fim}, TIPO {type(data_fim)}")
 
             if data_inicio < date.today():
                 messages.error(request, "A data de início não pode estar no passado.")
@@ -107,7 +106,9 @@ def alugar_carro(request, carro_id):
                 "data_inicio": data_inicio,
                 "data_fim": data_fim,
                 "preco_total": preco_total,
-                "dias": dias
+                "dias": dias,
+                'STRIPE_PUBLIC_KEY': settings.STRIPE_PUBLIC_KEY,
+                'aluguel': aluguel
             })
 
         except ValueError as ve:
@@ -117,41 +118,28 @@ def alugar_carro(request, carro_id):
 
 
 
+stripe.api_key = settings.STRIPE_SECRET_KEY
 @login_required
 def confirmar_aluguel(request, carro_id):
     carro = get_object_or_404(Carro, id=carro_id)
-    print(f"Carro encontrado: {carro}")  # Log para depuração
-
-    def converter_data_para_valida(data_str):
-        try:
-            data_objeto = datetime.strptime(data_str, '%B %d, %Y')  # Tenta converter formatos como 'March 21, 2025'
-            return data_objeto.strftime('%Y-%m-%d')  # Retorna o formato esperado
-        except ValueError:
-            return None  # Retorna None caso não consiga converter
 
     if request.method == "POST":
+        #pegamos os dados do formulario
         data_inicio_str = request.POST.get('data_inicio')
         data_fim_str = request.POST.get('data_fim')
-        preco_total = request.POST.get('preco_total')
-
-        print("Obtendo os dados do usuarios")
-        print(data_inicio_str, type(data_inicio_str))
-        print(data_fim_str, type(data_fim_str))
-        print(preco_total, type(preco_total))
+        #preco_total = request.POST.get('preco_total') fazemos o calculo do preco total
 
         try:
+            # Verificar se as dadas foram fornecidas
             if not data_inicio_str or not data_fim_str:
-                messages.error(request, "Por Favor, preencha os campos início e final.")
+                messages.error(request, "Por favor, preencha os campos início e final.")
                 return redirect("alugar_carro", carro_id=carro.id)
 
-            # Converter para o formato correto se necessário
-            data_inicio_str = converter_data_para_valida(data_inicio_str) or data_inicio_str
-            data_fim_str = converter_data_para_valida(data_fim_str) or data_fim_str
-
-            # Converter as datas recebidas
-            data_inicio = datetime.strptime(data_inicio_str, '%Y-%m-%d').date()
-            data_fim = datetime.strptime(data_fim_str, '%Y-%m-%d').date()
-
+            # Converter datas usando nossa função parse_data no utils.py
+            data_inicio = parse_data(data_inicio_str)
+            data_fim = parse_data(data_fim_str)
+            print(f"Data início convertida em confirmar aluguel: {data_inicio}, Data fim convertida em confirmar aluguel: {data_fim}")
+            
             if data_inicio < datetime.today().date():
                 messages.error(request, "A data de início não pode estar no passado.")
                 return redirect("alugar_carro", carro_id=carro.id)
@@ -160,17 +148,16 @@ def confirmar_aluguel(request, carro_id):
                 messages.error(request, "A data de término deve ser posterior à data de início.")
                 return redirect("alugar_carro", carro_id=carro.id)
 
-            # calcular os dias e preço total usando a função do utils.py
+            # Calcular dias e preço total usando a função do utils.py
             dias = calcular_dias_aluguel(data_inicio, data_fim)
-            print(f"Dias calculados: dentro do try {dias}")
             preco_total = carro.preco_diaria * dias
-            print(f"Preço total calculado: dentro do try {preco_total}")
 
-            # verificar se o carro está disponivel
+            # Verificar disponibilidade
             if not carro.disponibilidade:
                 messages.error(request, "O carro selecionado não está disponível para aluguel.")
-                return redirect("carros", carro_id=carro.id)
-            
+                return redirect("carros")
+
+            # Criar aluguel e transação
             aluguel = Aluguel.objects.create(
                 usuario=request.user,
                 carro=carro,
@@ -178,21 +165,60 @@ def confirmar_aluguel(request, carro_id):
                 data_fim=data_fim,
                 preco_total=preco_total
             )
-
+            # atualiza a disponibilidade do carro
             carro.disponibilidade = False
             carro.save()
 
-            messages.success(request, f"Você alugou o carro {carro.marca} {carro.modelo} para {dias} dias com sucesso! Total: €{preco_total:.2f}.")
-            
-            return redirect("meus_alugueis")
+            # cria a transação no banco de dados com status pendente
+            transacao = Transacao.objects.create(
+                aluguel=aluguel,
+                stripe_id="",
+                status="pendente",
+                valor=preco_total
+            )
+
+            # Criar sessão de pagamento no Stripe
+            success_url = f"{request.build_absolute_uri(reverse('pagamentos:sucesso'))}?session_id={{CHECKOUT_SESSION_ID}}"
+            cancel_url = f"{request.build_absolute_uri(reverse('pagamentos:cancelado'))}?session_id={{CHECKOUT_SESSION_ID}}"
+
+            checkout_session = stripe.checkout.Session.create(
+                payment_method_types=['card'],
+                line_items=[
+                    {
+                        'price_data': {
+                            'currency': 'eur',
+                            'product_data': {
+                                'name': f'Aluguel de {carro.marca} {carro.modelo}',
+                                'description': f"De {data_inicio} a {data_fim} ({dias} dias)",
+                            },
+                            'unit_amount': int(preco_total * 100),  # Em centavos
+                        },
+                        'quantity': 1,
+                    },
+                ],
+                mode='payment',
+                metadata={
+                    'aluguel_id': aluguel.id,
+                    'usuario': request.user.username
+                },
+                success_url=success_url,
+                cancel_url=cancel_url,
+            )
+            # Atualizar stripe_id na Transacao
+            transacao.stripe_id = checkout_session.id
+            transacao.save()
+
+            # Redirecionar ao Stripe
+            #return JsonResponse({'id': checkout_session.id})
+            return redirect(checkout_session.url, ) # Redirecionar ao Stripe code=303
 
         except ValueError as e:
-            messages.error(request, "As datas fornecidas estão em formato inválido. Use o formato AAAA-MM-DD.")
-            print(f"Erro ao converter datas: {e}")
+            messages.error(request, "Formato de data inválido. Use o formato AAAA-MM-DD.")
+            print(f"Erro: {e}")
             return redirect("alugar_carro", carro_id=carro.id)
 
         except Exception as e:
-            messages.error(request, "Ocorreu um erro inesperado. Por favor, tente novamente.")
+            messages.error(request, "Ocorreu um erro inesperado ao processar o aluguel.")
             print(f"Erro inesperado: {e}")
             return redirect("carros")
 
@@ -206,6 +232,9 @@ def meus_alugueis(request):
     usuario=usuario, status="Confirmado").order_by("-data_inicio")
     alugueis_finalizados = Aluguel.objects.filter(status="finalizado")
     alugueis_cancelados = Aluguel.objects.filter(status="cancelado")
+    alugueis_ativos = Aluguel.objects.filter(usuario=usuario, 
+                                             status__in=["Confirmado", "Ativo"]).order_by("-data_inicio")
+
 
     # adicionar o dia de hoje
     today = now().date()

@@ -118,3 +118,7 @@ class Aluguel(models.Model):
     
     def __str__(self):
         return f"Aluguel de {self.carro} por {self.usuario} ({self.data_inicio} -{self.data_fim}"
+
+    @property
+    def dias(self):
+        return (self.data_fim - self.data_inicio).days

@@ -20,13 +20,11 @@
     <div class="card">
         <div class="row g-0">
             <div class="col-md-4">
-                <!-- Imagem do carro -->
                 <img src="{{ carro.imagem.url }}" class="img-fluid rounded-start" alt="{{ carro.marca }} {{ carro.modelo }}">
             </div>
             <div class="col-md-8">
                 <div class="card-body">
                     <h2 class="card-title">Confirmação de Aluguel</h2>
-                    <!-- Detalhes do aluguel -->
                     <p><strong>Carro:</strong> {{ carro.marca }} {{ carro.modelo }}</p>
                     <p><strong>Ano:</strong> {{ carro.ano }}</p>
                     <p><strong>Data de Início:</strong> {{ data_inicio }}</p>
@@ -37,9 +35,8 @@
                     <!-- Formulário de confirmação -->
                     <form method="POST" action="{% url 'confirmar_aluguel' carro.id %}">
                         {% csrf_token %}
-                        <!-- Dados escondidos para envio -->
-                        <input type="hidden" id="data_inicio" name="data_inicio" value="{{ data_inicio }}">
-                        <input type="hidden" id="data_fim" name="data_fim" value="{{ data_fim }}">
+                        <input type="hidden" name="data_inicio" value="{{ data_inicio }}">
+                        <input type="hidden" name="data_fim" value="{{ data_fim }}">
                         <input type="hidden" name="preco_total" value="{{ preco_total }}">
 
                         <button type="submit" class="btn btn-success">Confirmar</button>

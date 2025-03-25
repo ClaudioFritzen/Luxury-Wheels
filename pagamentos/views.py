@@ -5,64 +5,72 @@ import stripe
 from carros.models import Aluguel
 from django.contrib import messages
 from .models import Transacao
+from django.urls import reverse
+from django.views.decorators.csrf import csrf_exempt
+
 
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
 # Create your views here.
-def criar_sessao_pagamento(request, aluguel_id):
-    aluguel = get_object_or_404(Aluguel, id=aluguel_id)
-    try:
-        checkout_session = stripe.checkout.Session.create(
-            payment_method_types=['card'],
-            line_items=[
-                {
-                    'price_data': {
-                        'currency': 'eur',
-                        'product_data': {
-                            'name': f'Aluguel de {aluguel.carro.marca} {aluguel.carro.modelo}',
-                        },
-                        'unit_amount': int(aluguel.carro.preco * 100), #transforma o valor em centavos
-                    },
-                    'quantity': 1,
-                },
-            ],
-            mode='payment',
-            success_url=request.build_absolute_uri('/pagamentos/sucesso'),
-            cancel_url=request.build_absolute_uri('/pagamentos/cancelado'),
-        )
-        return JsonResponse({'id': checkout_session.id})
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=403)
+from django.urls import reverse
 
 
 def sucesso(request):
     # Obtenha os dados relevantes do Stripe (ex.: ID da sessão ou transação)
     stripe_id = request.GET.get('session_id')  # Exemplo: você pode passar o ID pela URL ou outros métodos
-    
-    # Simule a consulta ao Stripe para obter informações (em produção use a API do Stripe para validação)
-    aluguel = Aluguel.objects.filter(transacao__stripe_id=stripe_id).first()
+    print(f"stripe_id de sucesso {stripe_id}")
+    # busque a transação assicioada ao ID da sessao
+    transacao = Transacao.objects.filter(stripe_id=stripe_id).first()
+    if not transacao:
+        messages.error(request, "Não foi possível encontrar a transação.")
+        return redirect('meus_alugueis')
 
-    if aluguel:
-        # Atualize o status do aluguel
+    if transacao:
+        # Atualize o status da transação para "sucesso"
+        transacao.status = "sucesso"
+        transacao.save()
+
+        # Atualize o status do aluguel relacionado à transação
+        aluguel = transacao.aluguel
         aluguel.status = "Ativo"
         aluguel.save()
 
-        # Salve a transação no banco de dados
-        Transacao.objects.create(
-            aluguel=aluguel,
-            stripe_id=stripe_id,
-            status="sucesso",
-            valor=aluguel.preco_total
-        )
 
+    #informando usuário que o pagamento foi concluído com sucesso
     messages.success(request, "Seu pagamento foi concluído com sucesso!")
     return redirect('meus_alugueis')
 
 
 def cancelado(request):
+    stripe_id = request.GET.get('session_id')
+    print(f"stripe_id de cancelado {stripe_id}")
+
+    transacao = Transacao.objects.filter(stripe_id=stripe_id).first()
+    
+    if transacao:
+        transacao.status="falha"
+        transacao.save()
     messages.error(request, "O pagamento foi cancelado.")
     return redirect('meus_alugueis')
 
-# def webhook(request):
-#     return render(request, 'pagamentos/webhook.html')
+@csrf_exempt
+def stripe_webhook(request):
+    payload = request.body
+    sig_header = request.META['HTTP_STRIPE_SIGNATURE']
+    endpoint_secret = settings.STRIPE_WEBHOOK_SECRET
+
+    try:
+        event = stripe.Webhook.construct_event(payload, sig_header, endpoint_secret)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
+
+    if event['type'] == 'checkout.session.completed':
+        session = event['data']['object']
+        stripe_id = session['id']
+        transacao = Transacao.objects.filter(stripe_id=stripe_id).first()
+        if transacao:
+            transacao.status = 'sucesso'
+            transacao.save()
+
+    return JsonResponse({'status': 'success'})
