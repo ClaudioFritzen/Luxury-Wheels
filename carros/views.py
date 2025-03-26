@@ -12,7 +12,11 @@ from django.conf import settings
 import stripe
 from django.urls import reverse
 
+from pagamentos.utils import criar_transacao, calcular_custos,criar_sessao_stripe,verificar_transacao_pendente
+from django.db import transaction
+from django.db.models import F
 # Create your views here.
+
 
 def lista_carros(request):
     # Recuperar valores dos filtros enviados pelo usuário
@@ -25,7 +29,8 @@ def lista_carros(request):
 
     # Iniciar a query base
     carros = Carro.objects.all()
-    user_has_permission = request.user.has_perm('carros.pode_gerenciar_inspecoes')
+    user_has_permission = request.user.has_perm(
+        'carros.pode_gerenciar_inspecoes')
 
     # Aplicar os filtros dinamicamente
     if filtro_transmissao:
@@ -39,11 +44,12 @@ def lista_carros(request):
     if filtro_qtd_pessoas:
         carros = carros.filter(qtd_pessoas=filtro_qtd_pessoas)
 
-    #<!-- Filtro de valor da diária -->
+    # <!-- Filtro de valor da diária -->
     if filtro_valor_diaria:
         if "-" in filtro_valor_diaria:
             min_valor, max_valor = filtro_valor_diaria.split("-")
-            carros = carros.filter(preco_diaria__gte=min_valor, preco_diaria__lte=max_valor)
+            carros = carros.filter(
+                preco_diaria__gte=min_valor, preco_diaria__lte=max_valor)
 
         elif "+" in filtro_valor_diaria:
             min_valor = filtro_valor_diaria.replace("+", "")
@@ -75,7 +81,8 @@ def alugar_carro(request, carro_id):
         data_fim_str = request.POST.get("data_fim")
 
         # Debug das datas recebidas
-        print(f"Datas recebidas pelo formulário: Início {data_inicio_str}, Fim {data_fim_str}")
+        print(
+            f"Datas recebidas pelo formulário: Início {data_inicio_str}, Fim {data_fim_str}")
         print(f"Tipo de data_inicio_str: {type(data_inicio_str)}")
 
         if not data_inicio_str or not data_fim_str:
@@ -86,14 +93,17 @@ def alugar_carro(request, carro_id):
             # Converter datas usando nossa função parse_data no utils.py
             data_inicio = parse_data(data_inicio_str)
             data_fim = parse_data(data_fim_str)
-            print(f"Data início convertida: {data_inicio}, TIPO {type(data_inicio)}, Data fim convertida: {data_fim}, TIPO {type(data_fim)}")
+            print(
+                f"Data início convertida: {data_inicio}, TIPO {type(data_inicio)}, Data fim convertida: {data_fim}, TIPO {type(data_fim)}")
 
             if data_inicio < date.today():
-                messages.error(request, "A data de início não pode estar no passado.")
+                messages.error(
+                    request, "A data de início não pode estar no passado.")
                 return redirect("alugar_carro", carro_id=carro.id)
 
             if data_fim < data_inicio:
-                messages.error(request, "A data de término deve ser posterior à data de início.")
+                messages.error(
+                    request, "A data de término deve ser posterior à data de início.")
                 return redirect("alugar_carro", carro_id=carro.id)
 
             # Usando a funcao no utils.py para calcular os dias
@@ -112,40 +122,46 @@ def alugar_carro(request, carro_id):
             })
 
         except ValueError as ve:
-            messages.error(request, "Formato de data inválido. Use o formato YYYY-MM-DD.")
+            messages.error(
+                request, "Formato de data inválido. Use o formato YYYY-MM-DD.")
             print(f"Erro ao converter datas: {ve}")
             return redirect("alugar_carro", carro_id=carro.id)
 
 
-
 stripe.api_key = settings.STRIPE_SECRET_KEY
+
+
 @login_required
 def confirmar_aluguel(request, carro_id):
     carro = get_object_or_404(Carro, id=carro_id)
 
     if request.method == "POST":
-        #pegamos os dados do formulario
+        # pegamos os dados do formulario
         data_inicio_str = request.POST.get('data_inicio')
         data_fim_str = request.POST.get('data_fim')
-        #preco_total = request.POST.get('preco_total') fazemos o calculo do preco total
+        # preco_total = request.POST.get('preco_total') fazemos o calculo do preco total
 
         try:
             # Verificar se as dadas foram fornecidas
             if not data_inicio_str or not data_fim_str:
-                messages.error(request, "Por favor, preencha os campos início e final.")
+                messages.error(
+                    request, "Por favor, preencha os campos início e final.")
                 return redirect("alugar_carro", carro_id=carro.id)
 
             # Converter datas usando nossa função parse_data no utils.py
             data_inicio = parse_data(data_inicio_str)
             data_fim = parse_data(data_fim_str)
-            print(f"Data início convertida em confirmar aluguel: {data_inicio}, Data fim convertida em confirmar aluguel: {data_fim}")
-            
+            print(
+                f"Data início convertida em confirmar aluguel: {data_inicio}, Data fim convertida em confirmar aluguel: {data_fim}")
+
             if data_inicio < datetime.today().date():
-                messages.error(request, "A data de início não pode estar no passado.")
+                messages.error(
+                    request, "A data de início não pode estar no passado.")
                 return redirect("alugar_carro", carro_id=carro.id)
 
             if data_fim <= data_inicio:
-                messages.error(request, "A data de término deve ser posterior à data de início.")
+                messages.error(
+                    request, "A data de término deve ser posterior à data de início.")
                 return redirect("alugar_carro", carro_id=carro.id)
 
             # Calcular dias e preço total usando a função do utils.py
@@ -154,7 +170,8 @@ def confirmar_aluguel(request, carro_id):
 
             # Verificar disponibilidade
             if not carro.disponibilidade:
-                messages.error(request, "O carro selecionado não está disponível para aluguel.")
+                messages.error(
+                    request, "O carro selecionado não está disponível para aluguel.")
                 return redirect("carros")
 
             # Criar aluguel e transação
@@ -191,7 +208,8 @@ def confirmar_aluguel(request, carro_id):
                                 'name': f'Aluguel de {carro.marca} {carro.modelo}',
                                 'description': f"De {data_inicio} a {data_fim} ({dias} dias)",
                             },
-                            'unit_amount': int(preco_total * 100),  # Em centavos
+                            # Em centavos
+                            'unit_amount': int(preco_total * 100),
                         },
                         'quantity': 1,
                     },
@@ -209,32 +227,35 @@ def confirmar_aluguel(request, carro_id):
             transacao.save()
 
             # Redirecionar ao Stripe
-            #return JsonResponse({'id': checkout_session.id})
-            return redirect(checkout_session.url, ) # Redirecionar ao Stripe code=303
+            # return JsonResponse({'id': checkout_session.id})
+            # Redirecionar ao Stripe code=303
+            return redirect(checkout_session.url, )
 
         except ValueError as e:
-            messages.error(request, "Formato de data inválido. Use o formato AAAA-MM-DD.")
+            messages.error(
+                request, "Formato de data inválido. Use o formato AAAA-MM-DD.")
             print(f"Erro: {e}")
             return redirect("alugar_carro", carro_id=carro.id)
 
         except Exception as e:
-            messages.error(request, "Ocorreu um erro inesperado ao processar o aluguel.")
+            messages.error(
+                request, "Ocorreu um erro inesperado ao processar o aluguel.")
             print(f"Erro inesperado: {e}")
             return redirect("carros")
 
     return redirect("carros")
+
 
 @login_required
 def meus_alugueis(request):
 
     usuario = request.user  # Obter o usuário autenticado
     alugueis_ativos = Aluguel.objects.filter(
-    usuario=usuario, status="Confirmado").order_by("-data_inicio")
+        usuario=usuario, status="Confirmado").order_by("-data_inicio")
     alugueis_finalizados = Aluguel.objects.filter(status="finalizado")
     alugueis_cancelados = Aluguel.objects.filter(status="cancelado")
-    alugueis_ativos = Aluguel.objects.filter(usuario=usuario, 
+    alugueis_ativos = Aluguel.objects.filter(usuario=usuario,
                                              status__in=["Confirmado", "Ativo"]).order_by("-data_inicio")
-
 
     # adicionar o dia de hoje
     today = now().date()
@@ -243,7 +264,7 @@ def meus_alugueis(request):
         "alugueis_finalizados": alugueis_finalizados,
         "username": usuario.username,  # Passar o nome do usuário para o template
         "alugueis_cancelados": alugueis_cancelados,
-        "today":today
+        "today": today
     })
 
 @login_required
@@ -269,54 +290,74 @@ def entregar_veiculo(request, aluguel_id):
 @login_required
 def extender_prazo(request, aluguel_id):
     aluguel = get_object_or_404(Aluguel, id=aluguel_id)
-
-
-    if request.method == "GET":
-        # Renderizar o formulário para preencher
-        carro = aluguel.carro  # Para obter o carro
-        return render(request, "carros/estender_prazo.html", {"aluguel": aluguel, "carro": carro})
+    carro = aluguel.carro
 
     if request.method == "POST":
-        carro = aluguel.carro
-        # Obter a nova data como string
         nova_data_fim_str = request.POST.get("nova_data_fim")
-        print(f"Data não convertida: {nova_data_fim_str}, Tipo: {type(nova_data_fim_str)}")
-
-        # Validação: Verificar se o aluguel pertence ao usuário logado
-        if aluguel.usuario != request.user:
-            messages.error(request, "Você não tem permissão para alterar este aluguel.")
-            return redirect("meus_alugueis")
 
         try:
-            # Converter a nova data para datetime.date
-            nova_data_fim = datetime.strptime(nova_data_fim_str, "%Y-%m-%d").date()
-            print(f"Data convertida: {nova_data_fim}, Tipo: {type(nova_data_fim)}")
+            # Converter nova_data_fim_str para datetime.date
+            with transaction.atomic(): # Garantir que todas as operações sejam executadas ou nenhuma
+                nova_data_fim = parse_data(nova_data_fim_str)
+                data_fim_atual = aluguel.data_fim  # Presume que já seja datetime.date
 
-            # Validação: A nova data deve ser maior que a data final atual
-            if nova_data_fim <= aluguel.data_fim:
-                messages.error(
-                    request, f"A nova data de término deve ser posterior à data final atual ({aluguel.data_fim})."
+                # Verificar se nova_data_fim é maior que data_fim_atual
+                if nova_data_fim <= data_fim_atual:
+                    messages.error(
+                        request, "A nova data deve ser posterior à data atual.")
+                    return redirect('meus_alugueis')
+
+                dias_adicionais = calcular_dias_aluguel(data_fim_atual, nova_data_fim)
+                custo_adicional = calcular_custos(dias_adicionais, carro.preco_diaria)
+                
+                # Verificando se ja existe uma transação pendente
+                # Buscar qualquer transação vinculada ao aluguel
+                transacao_existente = verificar_transacao_pendente(aluguel)
+                print(
+                    f"Transações encontradas: {Transacao.objects.filter(aluguel=aluguel).values()}")
+                print(
+                    f"Transação pendente: {Transacao.objects.filter(aluguel=aluguel, status='pendente').values()}")
+                
+                
+                if transacao_existente:
+                    # se a transação estiver pendente, exiba a mensagem de aviso
+                    messages.warning(request, "Já existe uma transação pendente para este aluguel.")
+                    return redirect('meus_alugueis')
+                
+                # Atualizar ou criar transação
+                nova_transacao = criar_transacao(aluguel, custo_adicional)
+
+                # Atualizar aluguel
+                aluguel.data_fim = nova_data_fim
+                aluguel.preco_total += custo_adicional
+                aluguel.save()
+
+                # Configurar o stripe
+                checkout_session = criar_sessao_stripe(
+                    aluguel, carro, custo_adicional, data_fim_atual, nova_data_fim_str, dias_adicionais, request
                 )
-                return redirect("meus_alugueis")
-
-            # Calcular os dias adicionais ANTES de atualizar a data do aluguel
-            dias_adicionais = calcular_dias_aluguel(aluguel.data_fim, nova_data_fim)
-
-            valor_adicional = dias_adicionais * aluguel.carro.preco_diaria
-            
-            # Atualizar o preço total e a nova data no banco de dados
-            aluguel.preco_total += valor_adicional
-            aluguel.data_fim = nova_data_fim
-            aluguel.save()
-
-            # Mensagem de sucesso
-            messages.success(
-                request,
-                f"O prazo do aluguel foi estendido para {aluguel.data_fim} com um custo adicional de €{valor_adicional:.2f}."
-            )
-        except ValueError:
-            # Erro na conversão de data
-            messages.error(request, "Por favor, insira uma data válida.")
+                nova_transacao.stripe_id = checkout_session.id
+                nova_transacao.save()
+                
+            # Redirecionar ao Stripe
+            return redirect(checkout_session.url)
+        
+        except ValueError as ve:
+            messages.error(
+                request, "Formato de data inválido. Use o formato AAAA-MM-DD.")
+            print(f"Erro ao converter datas: {ve}")
+            return redirect("meus_alugueis")
+        
+        except stripe.error.StripeError as stripe_error:
+            messages.error(
+                request, "Ocorreu um erro ao conectar-se ao Stripe. Tente novamente.")
+            print(f"Erro do Stripe: {stripe_error}")
+            return redirect("meus_alugueis")
+        
+        except Exception as e:
+            messages.error(
+                request, "Ocorreu um erro inesperado ao processar a extensão do aluguel.")
+            print(f"Erro inesperado: {e}")
             return redirect("meus_alugueis")
 
     return render(request, "carros/estender_prazo.html", {"aluguel": aluguel})
@@ -329,10 +370,11 @@ def cancelar_reserva(request, aluguel_id):
 
     # verificar se a reserva pode ser cancelada
     if aluguel.data_inicio <= now().date():
-        messages.error(request, "Não é possivel cancelar uma reserva que já foi iniciada ou concluída.")
+        messages.error(
+            request, "Não é possivel cancelar uma reserva que já foi iniciada ou concluída.")
         return redirect("meus_alugueis")
-    
-    try: #cancelar a reverva
+
+    try:  # cancelar a reverva
         aluguel.status = "cancelado"
         aluguel.save()
 
@@ -340,14 +382,15 @@ def cancelar_reserva(request, aluguel_id):
         carro = aluguel.carro
         carro.disponibilidade = True
         carro.save()
-        messages.success(request, f" A reserva do veículo {carro.marca} {carro.modelo} foi cancelada com sucesso!")
-    
+        messages.success(
+            request, f" A reserva do veículo {carro.marca} {carro.modelo} foi cancelada com sucesso!")
+
     except Exception as e:
-        #printar os erros 
+        # printar os erros
         print(e)
         messages.error(request, f"Erro ao tentar cancelar a reserva: {e}")
         return redirect("meus_alugueis")
-    
+
     return redirect("meus_alugueis")
 
 
@@ -359,7 +402,8 @@ def tem_permissao_inspecao(user):
 def lista_inspecoes(request, carro_id):
     # Verifica se o usuário tem a permissão necessária
     if not tem_permissao_inspecao(request.user):
-        return render(request, '403.html', status=403)  # Retorna a página 403 personalizada
+        # Retorna a página 403 personalizada
+        return render(request, '403.html', status=403)
 
     carro = get_object_or_404(Carro, id=carro_id)
     inspecoes = carro.inspecoes.all()
@@ -374,7 +418,8 @@ def lista_inspecoes(request, carro_id):
 def nova_inspecao(request, carro_id):
     # Verifica se o usuário tem a permissão necessária
     if not tem_permissao_inspecao(request.user):
-        return render(request, '403.html', status=403)  # Retorna a página 403 personalizada
+        # Retorna a página 403 personalizada
+        return render(request, '403.html', status=403)
 
     carro = get_object_or_404(Carro, id=carro_id)
 

@@ -16,6 +16,9 @@ def parse_data(data_str):
     Analisa diferentes formatos de data e retorna um objeto de data.
     Suporta meses em português e inglês.
     """
+    # Se já for datetime.date ou datetime.datetime, apenas retorna como date
+    if isinstance(data_str, (date, datetime)):
+        return data_str if isinstance(data_str, date) else data_str.date()
     # Define as localizações para português e inglês
     locais = ['pt_PT.UTF-8', 'en_US.UTF-8']
 
