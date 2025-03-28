@@ -8,7 +8,8 @@ def criar_sessao_stripe(aluguel, carro, custo_adicional, data_fim_atual, nova_da
     """Cria uma sessão de pagamento no Stripe."""
     success_url = f"{request.build_absolute_uri(reverse('pagamentos:sucesso'))}?session_id={{CHECKOUT_SESSION_ID}}"
     cancel_url = f"{request.build_absolute_uri(reverse('pagamentos:cancelado'))}?session_id={{CHECKOUT_SESSION_ID}}"
-    
+
+    # Criar sessão de checkout
     checkout_session = stripe.checkout.Session.create(
         payment_method_types=['card'],
         line_items=[
@@ -19,7 +20,7 @@ def criar_sessao_stripe(aluguel, carro, custo_adicional, data_fim_atual, nova_da
                         'name': f'Extensão de aluguel de {carro.marca} {carro.modelo}',
                         'description': f"De {data_fim_atual} a {nova_data_fim_str} ({dias_adicionais} dias)",
                     },
-                    'unit_amount': int(custo_adicional * 100),  # Em centavos
+                    'unit_amount': int(custo_adicional * 100),  # Valor em centavos
                 },
                 'quantity': 1,
             },
@@ -56,12 +57,13 @@ def calcular_custos(dias_adicionais, preco_diaria):
     return dias_adicionais * preco_diaria
 
 
-def criar_transacao(aluguel, custo_adicional):
-    """Cria uma nova transação para o aluguel."""
+def criar_transacao(aluguel, custo_adicional, payment_intent_id=None):
+    """Registra uma nova transação para o aluguel."""
     nova_transacao = Transacao.objects.create(
         aluguel=aluguel,
         status="pendente",
         valor=custo_adicional,
-        stripe_id="",
+        stripe_id=payment_intent_id if payment_intent_id else "",
+
     )
     return nova_transacao

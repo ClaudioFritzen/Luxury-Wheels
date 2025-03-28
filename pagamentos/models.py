@@ -16,7 +16,7 @@ class Transacao(models.Model):
     ]
 
     aluguel = models.ForeignKey(Aluguel, on_delete=models.CASCADE, related_name="transacoes")
-    stripe_id = models.CharField(max_length=255, blank=True, null=True)  # Stripe ID opcional
+    stripe_id = models.CharField(max_length=255, blank=True, null=True, verbose_name="Payment Intent ID")  # Stripe ID opcional
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default=PENDENTE)
     valor = models.DecimalField(max_digits=10, decimal_places=2)
     data = models.DateTimeField(auto_now_add=True)

@@ -334,34 +334,73 @@ def extender_prazo(request, aluguel_id):
 
 
 @login_required
-def cancelar_reserva(request, aluguel_id):
-    # buscar id
+def cancelar_aluguel(request, aluguel_id):
+    """Cancela o aluguel e emite um reembolso, se aplicável."""
     aluguel = get_object_or_404(Aluguel, id=aluguel_id, usuario=request.user)
 
-    # verificar se a reserva pode ser cancelada
+    # Verifica se o aluguel já começou
     if aluguel.data_inicio <= now().date():
-        messages.error(
-            request, "Não é possivel cancelar uma reserva que já foi iniciada ou concluída.")
+        print("Aluguel já iniciado. Não é possível cancelar.")  # Debug
+        messages.error(request, "Não é possível cancelar uma reserva que já foi iniciada ou concluída.")
         return redirect("meus_alugueis")
 
-    try:  # cancelar a reverva
-        aluguel.status = "cancelado"
-        aluguel.save()
+    try:
+        # Busca a última transação associada ao aluguel
+        ultima_transacao = aluguel.transacoes.last()
+        print(f"Última Transação: {ultima_transacao}")  # Debug
 
-        # Tornando o veiculo disponivel novamente
-        carro = aluguel.carro
-        carro.disponibilidade = True
-        carro.save()
-        messages.success(
-            request, f" A reserva do veículo {carro.marca} {carro.modelo} foi cancelada com sucesso!")
+        if not ultima_transacao or not ultima_transacao.stripe_id:
+            print("Erro: Transação não encontrada ou stripe_id vazio.")  # Debug
+            messages.error(request, "Erro: Não foi encontrada uma transação válida para reembolso.")
+            return redirect("meus_alugueis")
 
+        # Verifica se o stripe_id é uma sessão de checkout
+        if ultima_transacao.stripe_id.startswith("cs_"):  # ID da sessão (checkout_session)
+            print(f"ID da sessão encontrada: {ultima_transacao.stripe_id}")  # Debug
+            checkout_session = stripe.checkout.Session.retrieve(ultima_transacao.stripe_id)
+            payment_intent_id = checkout_session.get("payment_intent")
+            print(f"Payment Intent recuperado da sessão: {payment_intent_id}")  # Debug
+        else:
+            payment_intent_id = ultima_transacao.stripe_id
+            print(f"Stripe ID tratado como PaymentIntent: {payment_intent_id}")  # Debug
+
+        if not payment_intent_id:
+            print("Erro: PaymentIntent não encontrado.")  # Debug
+            messages.error(request, "Erro: Não foi possível encontrar o PaymentIntent associado.")
+            return redirect("meus_alugueis")
+
+        # Tenta criar o reembolso
+        try:
+            print(f"Iniciando reembolso para PaymentIntent: {payment_intent_id}")  # Debug
+            reembolso = stripe.Refund.create(payment_intent=payment_intent_id, reason="requested_by_customer")
+            print(f"Reembolso criado: {reembolso.id}, Status: {reembolso.status}")  # Debug
+
+            # Atualiza o status no banco de dados
+            with transaction.atomic():
+                aluguel.status = "Cancelado"
+                aluguel.save()
+
+                ultima_transacao.status = "reembolsado"
+                ultima_transacao.save()
+
+                # Atualiza a disponibilidade do carro
+                carro = aluguel.carro
+                carro.disponibilidade = True
+                carro.save()
+
+            messages.success(request, "Aluguel cancelado e reembolso processado com sucesso!")
+        except stripe.error.StripeError as e:
+            print(f"Erro do Stripe ao processar reembolso: {e.user_message}")  # Debug
+            messages.error(request, f"Erro ao tentar processar o reembolso no Stripe: {e.user_message}")
     except Exception as e:
-        # printar os erros
-        print(e)
-        messages.error(request, f"Erro ao tentar cancelar a reserva: {e}")
-        return redirect("meus_alugueis")
+        print(f"Erro inesperado: {str(e)}")  # Debug
+        messages.error(request, f"Erro ao tentar cancelar a reserva: {str(e)}")
 
     return redirect("meus_alugueis")
+
+
+
+
 
 
 def tem_permissao_inspecao(user):
