@@ -1,0 +1,38 @@
+Opções de Gerenciamento para o Site de Aluguel de Carros:
+
+1. Carros:
+   - Informações: Nome, modelo, marca, ano, tipo de combustível, preço por dia, status (disponível, alugado, manutenção).
+   - Funções de gerenciamento: Adicionar, editar, excluir ou listar carros.
+
+2. Clientes/Usuários:
+   - Informações: Nome, email, telefone, documentos (ex.: CNH), histórico de aluguéis.
+   - Funções de gerenciamento: Registrar clientes, atualizar informações e verificar histórico.
+
+3. Reservas/Aluguéis:
+   - Informações: Cliente, carro alugado, datas de início e fim, preço total, status do aluguel (pendente, ativo, concluído, cancelado).
+   - Funções de gerenciamento: Criar, atualizar ou cancelar reservas, além de visualizar a agenda de locações.
+
+4. Pagamentos:
+   - Informações: Cliente, valor, método de pagamento, status do pagamento (pago, pendente).
+   - Funções de gerenciamento: Registrar pagamentos, consultar histórico financeiro e gerenciar dívidas.
+
+5. Manutenção de Veículos:
+   - Informações: Carro, tipo de manutenção, data, custo, status (concluído, pendente).
+   - Funções de gerenciamento: Registrar e acompanhar manutenções.
+
+6. Relatórios:
+   - Informações: Relatórios sobre aluguéis, receitas, clientes frequentes, carros mais alugados, etc.
+   - Funções de gerenciamento: Gerar relatórios mensais, semanais ou personalizados.
+
+      Melhorias Futuras:
+      Filtros Dinâmicos:
+
+      Adicione filtros para selecionar períodos ou categorias específicas para o relatório.
+
+      Exportação:
+
+      Geração de PDF ou Excel para download dos relatórios.
+
+      Gráficos:
+
+      Use bibliotecas como Chart.js para criar visualizações interativas.
