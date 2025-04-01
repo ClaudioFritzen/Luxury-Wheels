@@ -217,10 +217,8 @@ def confirmar_aluguel(request, carro_id):
 def meus_alugueis(request):
 
     usuario = request.user  # Obter o usuário autenticado
-    alugueis_ativos = Aluguel.objects.filter(
-        usuario=usuario, status="Confirmado").order_by("-data_inicio")
-    alugueis_finalizados = Aluguel.objects.filter(status="finalizado")
-    alugueis_cancelados = Aluguel.objects.filter(status="cancelado")
+    alugueis_finalizados = Aluguel.objects.filter(usuario=usuario,status="finalizado").order_by("-data_inicio")
+    alugueis_cancelados = Aluguel.objects.filter(usuario=usuario,status="cancelado").order_by("-data_inicio")
     alugueis_ativos = Aluguel.objects.filter(usuario=usuario,
                                              status__in=["Confirmado", "Ativo"]).order_by("-data_inicio")
 
