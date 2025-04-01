@@ -11,7 +11,6 @@ from .utils import calcular_dias_aluguel
 class Carro(models.Model):
     marca = models.CharField(max_length=100)
     modelo = models.CharField(max_length=100)
-    ano = models.IntegerField()
     preco_diaria = models.DecimalField(max_digits=10, decimal_places=2)
     disponibilidade = models.BooleanField(default=True)
     imagem = models.ImageField(upload_to="carros/imagens/", null=True, blank=True)
@@ -58,32 +57,6 @@ class Carro(models.Model):
     def __str__(self):
         return f"{self.marca} {self.modelo} {self.ano}"
 
-
-## Tabela para fazer as inspeções do carro
-class Inspecao(models.Model):
-    carro = models.ForeignKey(Carro, on_delete=models.CASCADE, related_name='inspecoes')
-    data_inspecao = models.DateField(default=timezone.now)
-    observacoes = models.TextField(blank=True, null=True)
-    status = models.CharField(
-        max_length=20,
-        choices=[
-            ("Aprovado", "Aprovado"),
-            ("Reprovado", "Reprovado"),
-            ("Pendente", "Pendente")
-        ],
-        default="Pendente"
-        
-    )
-
-    class Meta:
-        permissions = [
-            ("pode_gerenciar_inspecoes", "Pode gerenciar inspeções"),
-        ]
-        
-
-    def __str__(self):
-        return f"Inspeção {self.id} - {self.carro} - {self.status}"
-    
 
 ## Parte do banco para salvar os carros alugados e fazer o calculo entre as datas
 class Aluguel(models.Model):

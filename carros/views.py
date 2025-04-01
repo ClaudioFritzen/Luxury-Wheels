@@ -1,17 +1,14 @@
 from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect, HttpResponse
-from .models import Carro, Aluguel, Inspecao
+from .models import Carro, Aluguel
 from datetime import datetime, date
 from django.utils.timezone import now
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from .forms import InspecaoForm
 from .utils import calcular_dias_aluguel, parse_data
 from pagamentos.models import Transacao
 from django.conf import settings
 import stripe
-from django.urls import reverse
-
 from pagamentos.utils import criar_transacao, calcular_custos,criar_sessao_stripe,verificar_transacao_pendente
 from django.db import transaction
 from django.db.models import F
@@ -397,52 +394,3 @@ def cancelar_aluguel(request, aluguel_id):
         messages.error(request, f"Erro ao tentar cancelar a reserva: {str(e)}")
 
     return redirect("meus_alugueis")
-
-
-
-
-
-
-def tem_permissao_inspecao(user):
-    return user.has_perm("carros.pode_gerenciar_inspecoes")
-
-
-@login_required
-def lista_inspecoes(request, carro_id):
-    # Verifica se o usuário tem a permissão necessária
-    if not tem_permissao_inspecao(request.user):
-        # Retorna a página 403 personalizada
-        return render(request, '403.html', status=403)
-
-    carro = get_object_or_404(Carro, id=carro_id)
-    inspecoes = carro.inspecoes.all()
-
-    return render(request, 'carros/lista_inspecoes.html', {
-        "carro": carro,
-        "inspecoes": inspecoes
-    })
-
-
-@login_required
-def nova_inspecao(request, carro_id):
-    # Verifica se o usuário tem a permissão necessária
-    if not tem_permissao_inspecao(request.user):
-        # Retorna a página 403 personalizada
-        return render(request, '403.html', status=403)
-
-    carro = get_object_or_404(Carro, id=carro_id)
-
-    if request.method == "POST":
-        form = InspecaoForm(request.POST)
-        if form.is_valid():
-            inspecao = form.save(commit=False)
-            inspecao.carro = carro
-            inspecao.save()
-            return redirect('lista_inspecoes', carro_id=carro.id)
-    else:
-        form = InspecaoForm()
-
-    return render(request, 'carros/nova_inspecao.html', {
-        'form': form,
-        'carro': carro,
-    })

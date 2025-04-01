@@ -1,6 +1,6 @@
 from django.urls import path
-from .views import alugar_carro, lista_carros, confirmar_aluguel, meus_alugueis, entregar_veiculo,extender_prazo,cancelar_aluguel, lista_inspecoes, nova_inspecao
-
+from .views import alugar_carro, lista_carros, confirmar_aluguel, meus_alugueis, entregar_veiculo,extender_prazo,cancelar_aluguel
+from gerenciamento.views import lista_inspecoes, nova_inspecao
 urlpatterns = [
     path("", lista_carros, name="carros"),
     path("alugar/<int:carro_id>/", alugar_carro, name="alugar_carro"),

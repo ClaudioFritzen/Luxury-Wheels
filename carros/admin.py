@@ -1,10 +1,9 @@
 from django.contrib import admin
-from .models import Carro, Inspecao, Aluguel
+from .models import Carro, Aluguel
+from gerenciamento.models import Inspecao
 # Register your models here.
 
 admin.site.register(Carro)
-admin.site.register(Inspecao)
-
 
 @admin.register(Aluguel)
 class AluguelAdmin(admin.ModelAdmin):
