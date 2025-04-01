@@ -1,0 +1,27 @@
+{% extends "bases/base.html" %}
+
+{% load static %}
+
+{% block head %}
+    <link href="{% static 'carros/css/inspecoes.css' %}" rel="stylesheet">
+{% endblock head %}
+
+{% block conteudo %}
+    <div class="container mt-5">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h2 class="card-title">Nova Inspeção para {{ carro.marca }} {{ carro.modelo }}</h2>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                    <div class="d-flex justify-content-end">
+                        <button type="submit" class="btn btn-success me-2">Salvar</button>
+                        <a href="{% url 'lista_inspecoes' carro.id %}" class="btn btn-secondary">Cancelar</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock conteudo %}

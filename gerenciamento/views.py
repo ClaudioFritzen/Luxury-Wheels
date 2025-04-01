@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from carros.models import Aluguel, Carro 
+from gerenciamento.models import Inspecao
 from django.db.models import Sum, Count, F
 
 from pagamentos.models import Transacao
@@ -75,31 +76,24 @@ def relatorios(request):
 
 
 def tem_permissao_inspecao(user):
-    return user.has_perm("carros.pode_gerenciar_inspecoes")
+    return user.has_perm("gerenciamento.pode_gerenciar_inspecoes", raise_exception=True)
 
 
 @login_required
+@permission_required("gerenciamento.pode_gerenciar_inspecoes", raise_exception=True)
 def lista_inspecoes(request, carro_id):
-    # Verifica se o usuário tem a permissão necessária
-    if not tem_permissao_inspecao(request.user):
-        # Retorna a página 403 personalizada
-        return render(request, '403.html', status=403)
-
     carro = get_object_or_404(Carro, id=carro_id)
     inspecoes = carro.inspecoes.all()
 
-    return render(request, 'carros/lista_inspecoes.html', {
+    return render(request, 'gerenciamento/lista_inspecoes.html', {
         "carro": carro,
         "inspecoes": inspecoes
     })
 
 
 @login_required
+@permission_required("gerenciamento.pode_gerenciar_inspecoes", raise_exception=True)
 def nova_inspecao(request, carro_id):
-    # Verifica se o usuário tem a permissão necessária
-    if not tem_permissao_inspecao(request.user):
-        # Retorna a página 403 personalizada
-        return render(request, '403.html', status=403)
 
     carro = get_object_or_404(Carro, id=carro_id)
 
@@ -113,7 +107,34 @@ def nova_inspecao(request, carro_id):
     else:
         form = InspecaoForm()
 
-    return render(request, 'carros/nova_inspecao.html', {
+    return render(request, 'gerenciamento/nova_inspecao.html', {
         'form': form,
         'carro': carro,
     })
+
+@login_required
+@permission_required("gerenciamento.pode_gerenciar_inspecoes", raise_exception=True)
+def editar_inspecao(request, inspecao_id):
+    inspecao = get_object_or_404(Inspecao, id=inspecao_id)  # Obtém a inspeção pelo ID
+
+    if request.method == "POST":  # Se o método for POST, processar o formulário enviado
+        form = InspecaoForm(request.POST, instance=inspecao)
+        if form.is_valid():  # Verifica se os dados do formulário são válidos
+            form.save()  # Salva as alterações no banco de dados
+            return redirect("lista_inspecoes", carro_id=inspecao.carro.id)
+    else:  # Se o método for GET, inicializar o formulário com os dados atuais
+        form = InspecaoForm(instance=inspecao)
+
+    return render(request, "gerenciamento/editar_inspecao.html", {
+        "form": form,
+        "inspecao": inspecao,
+    })
+
+
+@login_required
+@permission_required("gerenciamento.pode_gerenciar_inspecoes", raise_exception=True)
+def excluir_inspecao(request, inspecao_id):
+    inspecao = get_object_or_404(Inspecao, id=inspecao_id)
+    carro_id = inspecao.carro.id
+    inspecao.delete()
+    return redirect('lista_inspecoes', carro_id=carro_id)

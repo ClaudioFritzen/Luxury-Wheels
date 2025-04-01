@@ -18,20 +18,33 @@
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>Data da Inspeção</th>
+                        <tr>
+                        <th>Data da Última Inspeção</th>
+                        <th>Data da Próxima Inspeção</th>
+                        <th>Data Obrigatória</th>
                         <th>Status</th>
                         <th>Observações</th>
+                        <th>Ações</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for inspecao in inspecoes %}
-                        <tr>
-                            <td>{{ forloop.counter }}</td>
-                            <td>{{ inspecao.data_inspecao|date:"d/m/Y" }}</td>
-                            <td>{{ inspecao.status }}</td>
-                            <td>{{ inspecao.observacoes|default:"Sem observações" }}</td>
+                    <tr>
+                        <td>{{ inspecao.data_ultima_inspecao }}</td>
+                        <td>{{ inspecao.data_proxima_inspecao }}</td>
+                        <td>{{ inspecao.data_proxima_inspecao_obrigatoria }}</td>
+                        <td>{{ inspecao.status }}</td>
+                        <td>{{ inspecao.observacoes }}</td>
+                        <td>
+                            <a href="{% url 'editar_inspecao' inspecao.id %}">Editar</a>
+                            <a href="{% url 'excluir_inspecao' inspecao.id %}">Excluir</a>
+                        </td>
                         </tr>
-                    {% endfor %}
+                        {% empty %}
+                        <tr>
+                            <td colspan="6">Nenhuma inspeção encontrada.</td>
+                        </tr>
+                        {% endfor %}
                 </tbody>
             </table>
         {% else %}
