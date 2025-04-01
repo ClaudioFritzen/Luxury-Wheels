@@ -9,68 +9,97 @@
 
 {% block conteudo %}
 
-<div class="container">
-    <h2>Relatórios de Aluguéis e Receitas</h2>
-    
-    <p><strong>Total de Aluguéis:</strong> {{ total_alugueis }}</p>
-    <p><strong>Receita Total:</strong> €{{ receita_total|floatformat:2 }}</p>
-    
-    <h3>Carros Mais Alugados</h3>
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Marca</th>
-                <th>Modelo</th>
-                <th>Total de Aluguéis</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for carro in carros_populares %}
-            <tr>
-                <td>{{ carro.carro__marca }}</td>
-                <td>{{ carro.carro__modelo }}</td>
-                <td>{{ carro.total_alugueis }}</td>
-            </tr>
+    <div class="container">
+        <h2>Relatórios de Aluguéis e Receitas</h2>
+        
+        <p><strong>Total de Aluguéis:</strong> {{ total_alugueis }}</p>
+        <p><strong>Receita Total:</strong> €{{ receita_total|floatformat:2 }}</p>
+        
+        <h3>Carros Mais Alugados</h3>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Marca</th>
+                    <th>Modelo</th>
+                    <th>Total de Aluguéis</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for carro in carros_populares %}
+                <tr>
+                    <td>{{ carro.carro__marca }}</td>
+                    <td>{{ carro.carro__modelo }}</td>
+                    <td>{{ carro.total_alugueis }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h3>Receita por Categoria</h3>
+        <ul>
+            {% for categoria in receita_por_categoria %}
+            <li>{{ categoria.categoria }}: €{{ categoria.receita_total|floatformat:2 }}</li>
             {% endfor %}
-        </tbody>
-    </table>
+        </ul>
 
-    <h3>Receita por Categoria</h3>
-    <ul>
-        {% for categoria in receita_por_categoria %}
-        <li>{{ categoria.categoria }}: €{{ categoria.receita_total|floatformat:2 }}</li>
-        {% endfor %}
-    </ul>
+        <p><strong>Aluguéis Ativos:</strong> {{ alugueis_ativos }}</p>
+        <h3>Status dos Veículos</h3>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Marca</th>
+                    <th>Modelo</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for veiculo in veiculos_status %}
+                <tr>
+                    <td>{{ veiculo.carro__marca }}</td>
+                    <td>{{ veiculo.carro__modelo }}</td>
+                    <td>{{ veiculo.status }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
 
-    <p><strong>Aluguéis Ativos:</strong> {{ alugueis_ativos }}</p>
-</div>
->
 
 
-    {% comment %} <canvas id="graficoReceitas"></canvas>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        var ctx = document.getElementById('graficoReceitas').getContext('2d');
-        var graficoReceitas = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: [{% for carro in aluguel_por_carro %}'{{ carro.carro__nome }}',{% endfor %}],
-                datasets: [{
-                    label: 'Receitas por Carro',
-                    data: [{% for carro in aluguel_por_carro %}{{ carro.receita_gerada }},{% endfor %}],
-                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                }
-            }
-        });
-    </script> {% endcomment %}
 
+        <h3>Status dos Pagamentos</h3>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Status</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Concluídos</td>
+                    <td>{{ pagamentos_concluidos }}</td>
+                </tr>
+                <tr>
+                    <td>Pendentes</td>
+                    <td>{{ pagamentos_pendentes }}</td>
+                </tr>
+                <tr>
+                    <td>Cancelados</td>
+                    <td>{{ pagamentos_cancelados }}</td>
+                </tr>
+                <tr>
+                    <td>Reembolsados</td>
+                    <td>{{ pagamentos_reembolsados }}</td>
+                </tr>
+            </tbody>
+        </table>
+        <h3>Distribuição de Pagamentos</h3>
+        <img src="{% static 'gerenciamento/images/grafico_pizza.png' %}" alt="Gráfico de Pagamentos">
+
+
+
+    </div>
+ 
 {% endblock %}
+
+
