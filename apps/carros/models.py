@@ -55,7 +55,7 @@ class Carro(models.Model):
     qtd_pessoas = models.CharField(max_length=20, choices=QTD_PESSOAS, default='1-4')
 
     def __str__(self):
-        return f"{self.marca} {self.modelo} {self.ano}"
+        return f"{self.marca} {self.modelo}"
 
 
 ## Parte do banco para salvar os carros alugados e fazer o calculo entre as datas

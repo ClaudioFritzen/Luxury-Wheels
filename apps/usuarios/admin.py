@@ -8,8 +8,9 @@ class CustomUsuarioAdmin(UserAdmin):
         (None, {'fields': ('username', 'password')}),
         ('Informações pessoais', {'fields': ('primeiro_nome', 'ultimo_nome', 'email')}),
         ('Permissões', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
-        ('Datas importantes', {'fields': ('last_login', 'data_criacao', 'data_atualizacao')}),
+        ('Datas importantes', {'fields': ('last_login',)}),
     )
+    readonly_fields = ('data_criacao', 'data_atualizacao')
 
     # Configure os campos de pesquisa e exibição
     list_display = ('username', 'email', 'is_active', 'is_staff')

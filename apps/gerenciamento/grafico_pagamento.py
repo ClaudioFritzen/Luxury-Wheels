@@ -22,7 +22,8 @@ def gerar_grafico_pagamento(pagamentos_pendentes, pagamentos_cancelados, pagamen
     # Título e salvamento
     plt.title("Distribuição de Pagamentos por Status")
     plt.savefig('templates/static/gerenciamento/images/grafico_pizza.png')  # Salvar como imagem
-    plt.show()
+    #plt.show() ## remover ou fechar
+    #plt.close()  # Fechar a figura para liberar memória
 
 # Exemplo de uso
 if __name__ == "__main__":

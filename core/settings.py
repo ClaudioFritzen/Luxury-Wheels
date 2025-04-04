@@ -12,12 +12,15 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 from dotenv import load_dotenv
-import os
+import os, sys
 
 load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+PROJECT_ROOT = os.path.dirname(__file__)
+
+sys.path.insert(0, os.path.join(PROJECT_ROOT, '../apps' ))
 
 
 # Quick-start development settings - unsuitable for production
@@ -35,6 +38,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -157,3 +161,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # integracao com stripe
 STRIPE_PUBLIC_KEY = os.getenv('STRIPE_PUBLIC_KEY')
 STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY')
+
+
+JAZZMIN_SETTINGS = {
+    "site_title": "Meu Projeto",
+    "site_header": "Administração",
+    "welcome_sign": "Bem-vindo ao painel de administração",
+    "show_ui_builder": True,
+    # Outras opções de personalização...
+}
