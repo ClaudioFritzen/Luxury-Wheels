@@ -8,7 +8,6 @@
 {% block conteudo %}
     <div class="container mt-5">
         <h2>Bem-vindo(a), {{ username }}!</h2>  <!-- Mensagem de boas-vindas com o nome do usuário -->
-        <h3>Meus Aluguéis</h3>
 
             {% if messages %}
                 <div class="alert alert-success" role="alert">
@@ -18,6 +17,7 @@
                 </div>
             {% endif %}
 
+        <h3>Meus Aluguéis</h3>
         <!-- Alugueis Ativos-->
         <h4> Alugueis Ativos </h4>
         <ul>

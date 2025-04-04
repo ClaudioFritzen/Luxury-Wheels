@@ -2,17 +2,42 @@ from django.shortcuts import render
 from carros.models import Aluguel, Carro 
 from gerenciamento.models import Inspecao
 from django.db.models import Sum, Count, F
-
+from usuarios.models import Usuario
 from pagamentos.models import Transacao
 from gerenciamento.grafico_pagamento import gerar_grafico_pagamento
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect
 from gerenciamento.forms import InspecaoForm
 from django.contrib.auth.decorators import permission_required
+from gerenciamento.filtro_mensal import filtrar_faturamento_por_mes
 
 @login_required
 @permission_required('gerenciamento.ver_relatorios', raise_exception=True)
 def relatorios(request):
+    # Filtra os aluguéis pelo mês e ano selecionados
+    from datetime import datetime
+    # Obtém os meses e anos para o range no template
+    mes_atual = datetime.now().month
+    ano_atual = datetime.now().year
+
+    ## botao limpar filtro
+    if 'limpar_filtro' in request.GET:
+        mes_selecionado = mes_atual
+        ano_selecionado = ano_atual
+    else:
+        # Obtém o mês e ano selecionados do request GET
+        mes_selecionado = int(request.GET.get('mes', mes_atual))
+        ano_selecionado = int(request.GET.get('ano', ano_atual))
+    
+    # pegando os ultimos 5 clientes
+    ultimos_clientes = Usuario.objects.all().order_by('-data_criacao')[:5]
+
+   
+    # Chama a função de filtro mensal para obter os dados filtrados
+    faturamento = filtrar_faturamento_por_mes(mes_selecionado, ano_selecionado)
+    alugueis_filtrados = faturamento['alugueis']
+    receita_total_mes = faturamento['receita_total']
+
     # Total de aluguéis
     total_alugueis = Aluguel.objects.count()
 
@@ -58,6 +83,9 @@ def relatorios(request):
 
     # Contexto para o template
     context = {
+        'receita_total_mes': receita_total_mes,
+        'meses': range(1, 13),
+        'anos': range(2020, 2031),
         'total_alugueis': total_alugueis,
         'receita_total': receita_total,
         'carros_populares': carros_populares,
@@ -69,6 +97,8 @@ def relatorios(request):
         'pagamentos_pendentes': pagamentos_pendentes,
         'pagamentos_cancelados': pagamentos_cancelados,
         'pagamentos_reembolsados': pagamentos_reembolsados,
+        'alugueis_filtrados': alugueis_filtrados,
+        'ultimos_clientes': ultimos_clientes,  # Adiciona os últimos clientes ao contexto
     }
 
     return render(request, 'gerenciamento/relatorios.html', context)
@@ -138,3 +168,22 @@ def excluir_inspecao(request, inspecao_id):
     carro_id = inspecao.carro.id
     inspecao.delete()
     return redirect('lista_inspecoes', carro_id=carro_id)
+
+
+@login_required
+@permission_required("gerenciamento.pode_gerenciar_inspecoes", raise_exception=True)
+def all_inspecao(request):
+    # Busque todas as inspeções relacionadas a carros
+    inspecoes = []
+    carros = Carro.objects.all()
+    
+    for carro in carros:
+        inspecoes.extend(carro.inspecoes.all())  # Use o `related_name='inspecoes'` definido no modelo Inspecao
+
+    # Exiba as inspeções encontradas no terminal para validação
+    print(inspecoes)
+
+    # Renderize as inspeções para o template
+    return render(request, 'gerenciamento/all_inspecao.html', {
+        "inspecoes": inspecoes
+    })
