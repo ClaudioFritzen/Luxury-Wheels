@@ -1,3 +1,4 @@
+from django.db.models import Q
 from django.shortcuts import render
 from carros.models import Aluguel, Carro 
 from gerenciamento.models import Inspecao
@@ -10,6 +11,7 @@ from django.shortcuts import get_object_or_404, redirect
 from gerenciamento.forms import InspecaoForm
 from django.contrib.auth.decorators import permission_required
 from gerenciamento.filtro_mensal import filtrar_faturamento_por_mes
+
 
 @login_required
 @permission_required('gerenciamento.ver_relatorios', raise_exception=True)
@@ -181,9 +183,31 @@ def all_inspecao(request):
         inspecoes.extend(carro.inspecoes.all())  # Use o `related_name='inspecoes'` definido no modelo Inspecao
 
     # Exiba as inspeções encontradas no terminal para validação
-    print(inspecoes)
+    #print(inspecoes)
 
     # Renderize as inspeções para o template
     return render(request, 'gerenciamento/all_inspecao.html', {
         "inspecoes": inspecoes
     })
+
+@login_required
+
+@permission_required("gerenciamento.pode_gerenciar_carros", raise_exception=True)
+
+
+
+def lista_carros(request):
+    # Busque todos os carros, independentemente de terem inspeções
+    carros = Carro.objects.filter(
+        Q(inspecoes__isnull=True) | Q(inspecoes__isnull=False)
+    ).distinct()  # Use distinct() para evitar duplicatas caso existam múltiplas inspeções para o mesmo carro.
+
+    # Exiba os carros encontrados no terminal para validação
+    for carro in carros:
+        print(carro)
+
+    # Renderize os carros para o template
+    return render(request, 'gerenciamento/frota.html', {
+        "carros": carros
+    })
+

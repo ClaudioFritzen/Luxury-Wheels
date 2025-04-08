@@ -1,4 +1,4 @@
-{% extends "bases/base.html" %}
+{% extends "bases/gerenciamento.html" %}
 
 {% load static %}
 
@@ -28,6 +28,9 @@
         </li>
         <li class="nav-item" role="presentation">
         <button class="nav-link" id="clientes-tab" data-bs-toggle="tab" data-bs-target="#clientes" type="button" role="tab">Últimos Clientes</button>
+        </li>
+        <li class="nav-item" role="presentation">
+        <button class="nav-link" id="inspecoes-tab" data-bs-toggle="tab" data-bs-target="#inspecoes" type="button" role="tab">Inspeções</button>
         </li>
     </ul>
 
@@ -168,6 +171,25 @@
                     </tr>
                     {% endfor %}
                 </tbody>
+            </table>
+        </div>
+        <!-- Últimos Clientes -->
+        <div class="tab-pane fade" id="inspecoes" role="tabpanel" aria-labelledby="inspecoes-tab">
+            <h3 class="mt-4">Ver lista da Frota | Inspeção</h3>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Ver Veiculos indisponíveis | Proxima atualizacao</th>
+                        <form method="POST" action="{% url 'frota_inspecao' %}" style="display: inline;">
+                        {% csrf_token %}
+
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#inspecaoModal" url="">Ver Inspeções</button>
+
+                    </form>
+                        
+                    </tr>
+                </thead>
+                
             </table>
         </div>
 
