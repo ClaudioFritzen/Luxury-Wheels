@@ -1,0 +1,119 @@
+{% extends "bases/gerenciamento.html" %}
+
+{% load static %}
+
+{% block head %}
+    <link rel="stylesheet" href="{% static 'usuarios/css/css.css' %}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+{% endblock %}
+
+{% block conteudo %}
+<div class="container mt-5">
+    <h2 class="mb-4">Gestão de Veículos</h2>
+
+    <!-- Tabs Navegação -->
+    <ul class="nav nav-tabs" id="veiculosTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="indisponiveis-tab" data-bs-toggle="tab" data-bs-target="#indisponiveis" type="button" role="tab">Veículos Indisponíveis</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="revisao-tab" data-bs-toggle="tab" data-bs-target="#revisao" type="button" role="tab">Próxima Revisão a Expirar</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="inspecao-tab" data-bs-toggle="tab" data-bs-target="#inspecao" type="button" role="tab">Próxima Inspeção Obrigatória a Expirar</button>
+        </li>
+    </ul>
+
+    <!-- Conteúdo das Tabs -->
+    <div class="tab-content" id="veiculosTabContent">
+        <!-- Veículos Indisponíveis -->
+        <div class="tab-pane fade show active" id="indisponiveis" role="tabpanel" aria-labelledby="indisponiveis-tab">
+            <h3 class="mt-4">Veículos Indisponíveis</h3>
+            {% if veiculos_indisponiveis %}
+            <table class="table table-striped">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Marca</th>
+                        <th>Modelo</th>
+                        <th>Motivo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for veiculo in veiculos_indisponiveis %}
+                    <tr>
+                        <td>{{ veiculo.carro.id }}</td>
+                        <td>{{ veiculo.carro.marca }}</td>
+                        <td>{{ veiculo.carro.modelo }}</td>
+                        <td>{{ veiculo.motivo }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="alert alert-warning text-center">Não há veículos indisponíveis no momento.</div>
+            {% endif %}
+        </div>
+
+        <!-- Próxima Revisão a Expirar -->
+        <div class="tab-pane fade" id="revisao" role="tabpanel" aria-labelledby="revisao-tab">
+            <h3 class="mt-4">Veículos com Próxima Revisão a Expirar em 15 Dias</h3>
+            {% if veiculos_revisao %}
+            <table class="table table-striped">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Marca</th>
+                        <th>Modelo</th>
+                        <th>Data da Próxima Revisão</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for veiculo in veiculos_revisao %}
+                    <tr>
+                        <td>{{ veiculo.id }}</td>
+                        <td>{{ veiculo.marca }}</td>
+                        <td>{{ veiculo.modelo }}</td>
+                        <td>{{ veiculo.data_proxima_revisao }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="alert alert-warning text-center">Nenhum veículo com revisão próxima a expirar.</div>
+            {% endif %}
+        </div>
+
+        <!-- Próxima Inspeção Obrigatória a Expirar -->
+        <div class="tab-pane fade" id="inspecao" role="tabpanel" aria-labelledby="inspecao-tab">
+            <h3 class="mt-4">Veículos com Próxima Inspeção Obrigatória a Expirar em 15 Dias</h3>
+            {% if veiculos_inspecao %}
+            <table class="table table-striped">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Marca</th>
+                        <th>Modelo</th>
+                        <th>Data da Inspeção Obrigatória</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for veiculo in veiculos_inspecao %}
+                    <tr>
+                        <td>{{ veiculo.id }}</td>
+                        <td>{{ veiculo.marca }}</td>
+                        <td>{{ veiculo.modelo }}</td>
+                        <td>{{ veiculo.data_proxima_inspecao_obrigatoria }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="alert alert-warning text-center">Nenhum veículo com inspeção próxima a expirar.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+{% endblock %}

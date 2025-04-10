@@ -11,7 +11,8 @@ from django.shortcuts import get_object_or_404, redirect
 from gerenciamento.forms import InspecaoForm
 from django.contrib.auth.decorators import permission_required
 from gerenciamento.filtro_mensal import filtrar_faturamento_por_mes
-
+from datetime import timedelta
+from django.utils.timezone import now
 
 @login_required
 @permission_required('gerenciamento.ver_relatorios', raise_exception=True)
@@ -135,6 +136,7 @@ def nova_inspecao(request, carro_id):
             inspecao = form.save(commit=False)
             inspecao.carro = carro
             inspecao.save()
+            carro.atualizar_disponibilidade()  # Atualiza a disponibilidade do carro após adicionar a inspeção
             return redirect('lista_inspecoes', carro_id=carro.id)
     else:
         form = InspecaoForm()
@@ -153,6 +155,7 @@ def editar_inspecao(request, inspecao_id):
         form = InspecaoForm(request.POST, instance=inspecao)
         if form.is_valid():  # Verifica se os dados do formulário são válidos
             form.save()  # Salva as alterações no banco de dados
+            inspecao.carro.atualizar_disponibilidade()  # Atualiza a disponibilidade do carro após editar a inspeção
             return redirect("lista_inspecoes", carro_id=inspecao.carro.id)
     else:  # Se o método for GET, inicializar o formulário com os dados atuais
         form = InspecaoForm(instance=inspecao)
@@ -191,11 +194,7 @@ def all_inspecao(request):
     })
 
 @login_required
-
 @permission_required("gerenciamento.pode_gerenciar_carros", raise_exception=True)
-
-
-
 def lista_carros(request):
     # Busque todos os carros, independentemente de terem inspeções
     carros = Carro.objects.filter(
@@ -211,3 +210,24 @@ def lista_carros(request):
         "carros": carros
     })
 
+from gerenciamento.manutencao_utils import get_veiculos_indisponiveis_por_manutencao,get_veiculos_inspecao_obrigatoria_a_expirar,get_proxima_revisao_a_expirar
+@login_required
+@permission_required("gerenciamento.pode_gerenciar_inspecoes", raise_exception=True)
+def gestao_veiculos(request):
+    veiculos = Carro.objects.all()
+
+    # Filtrar veículos indisponíveis
+    indisponiveis = get_veiculos_indisponiveis_por_manutencao(veiculos)
+
+    # Filtrar veículos com revisão próxima a expirar
+    revisao = get_proxima_revisao_a_expirar(veiculos)
+    
+    # Filtrar veículos com inspeção obrigatória próxima a expirar
+    inspecao_proxima = get_veiculos_inspecao_obrigatoria_a_expirar(veiculos)
+
+
+    return render(request, "gerenciamento/manutencao.html", {
+        "veiculos_indisponiveis": indisponiveis,
+        "veiculos_revisao": revisao,
+        "veiculos_inspecao": inspecao_proxima,
+    })
