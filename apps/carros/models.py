@@ -56,10 +56,11 @@ class Carro(models.Model):
     qtd_pessoas = models.CharField(max_length=20, choices=QTD_PESSOAS, default='1-4')
 
     def atualizar_disponibilidade(self):
-        """Atualiza a disponibilidade do carro com base nas inspeções."""
+        """Atualiza a disponibilidade do carro com base nas inspeções e aluguéis ativos."""
         hoje = timezone.now().date()
         um_ano_atras = hoje - timedelta(days=365)
 
+        # Verificar se há inspeções atrasadas
         for inspecao in self.inspecoes.all():
             if inspecao.data_ultima_inspecao and inspecao.data_ultima_inspecao < um_ano_atras:
                 self.disponibilidade = False
@@ -70,13 +71,25 @@ class Carro(models.Model):
                 self.save()
                 return
 
-        self.disponibilidade = True
+        # Verificar se há aluguéis ativos
+        if self.aluguéis.filter(status="Ativo").exists():
+            self.disponibilidade = False
+        else:
+            self.disponibilidade = True
+
+        # Salvar a alteração no banco
         self.save()
+        print(f"[DEBUG] Disponibilidade do carro ID {self.id} atualizada para {self.disponibilidade}")
+
     def __str__(self):
         return f"{self.marca} {self.modelo}"
 
 
 ## Parte do banco para salvar os carros alugados e fazer o calculo entre as datas
+from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
 class Aluguel(models.Model):
     usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name="aluguéis")
     carro = models.ForeignKey(Carro, on_delete=models.CASCADE, related_name="aluguéis")
@@ -86,29 +99,36 @@ class Aluguel(models.Model):
     status = models.CharField(
         max_length=20,
         choices=[
-            ("Confirmado","Confirmado"),
-            ("Em Andamento","Em Andamento"),
-            ("Concluido","Concluido"),
-            ("Cancelado","Cancelado"),
-            ("Finalizado","Finalizado"),
-            ("Atrasado","Atrasado"),
+            ("Confirmado", "Confirmado"),
+            ("Em Andamento", "Em Andamento"),
+            ("Concluido", "Concluido"),
+            ("Cancelado", "Cancelado"),
+            ("Finalizado", "Finalizado"),
+            ("Atrasado", "Atrasado"),
             ("Ativo", "Ativo"),
         ],
         default="Confirmado"
     )
 
     def calcula_preco_total(self):
-        """Calculando o preço do tempo do veiclulo"""
+        """Calculando o preço do tempo do veículo"""
         dias = calcular_dias_aluguel(self.data_inicio, self.data_fim)
         return self.carro.preco_diaria * dias if dias > 0 else self.carro.preco_diaria
-    
+
     def save(self, *args, **kwargs):
-        """Sobreescreve o save para calcular o preço antes de salvar"""
-        self.preco_total = self.calcula_preco_total()
+        print(f"Salvando aluguel: {self.id}")
+        print(f"Status do aluguel: {self.status}")
+        print(f"Disponibilidade do carro antes: {self.carro.disponibilidade}")
+        if self.status == "Ativo":
+            self.carro.disponibilidade = False
+        elif self.status in ["Finalizado", "Cancelado", "Concluido"]:
+            self.carro.disponibilidade = True
+        self.carro.save()
+        print(f"Disponibilidade do carro depois: {self.carro.disponibilidade}")
         super().save(*args, **kwargs)
-    
+
     def __str__(self):
-        return f"Aluguel de {self.carro} por {self.usuario} ({self.data_inicio} -{self.data_fim}"
+        return f"Aluguel de {self.carro} por {self.usuario} ({self.data_inicio} - {self.data_fim})"
 
     @property
     def dias(self):

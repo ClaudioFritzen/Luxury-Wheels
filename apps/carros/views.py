@@ -25,17 +25,14 @@ def lista_carros(request):
     filtro_valor_diaria = request.GET.get('preco_diaria')
 
     # Atualizar disponibilidade dos veículos antes de aplicar os filtros
-    for carro in Carro.objects.all():
-        carro.atualizar_disponibilidade()  # Atualiza com base nas regras de negócio
 
-    # Iniciar a query base (listar todos os carros, independentemente de disponibilidade)
-    carros = Carro.objects.all()
+    carros_disponiveis = Carro.objects.all()
 
     # Verificar permissão do usuário
     user_has_permission = request.user.has_perm(
         'carros.pode_gerenciar_inspecoes')
 
-    # Aplicar os filtros dinamicamente
+    # Aplicar filtros dinamicamente
     if filtro_transmissao:
         carros = carros.filter(transmissao=filtro_transmissao)
     if filtro_combustivel:
@@ -53,14 +50,17 @@ def lista_carros(request):
             min_valor, max_valor = filtro_valor_diaria.split("-")
             carros = carros.filter(
                 preco_diaria__gte=min_valor, preco_diaria__lte=max_valor)
-
         elif "+" in filtro_valor_diaria:
             min_valor = filtro_valor_diaria.replace("+", "")
             carros = carros.filter(preco_diaria__gte=min_valor)
 
-    # Retornar o contexto com todos os carros (com status de disponibilidade)
+    # Retornar contexto ao template
     return render(request, "carros/carros.html", {
-        "carros": carros,
+        "carros": carros_disponiveis,
+        "filtro_transmissao": filtro_transmissao,
+        "filtro_combustivel": filtro_combustivel,
+        "filtro_categoria": filtro_categoria,
+        "filtro_tipo_veiculos": filtro_tipo_veiculos,
         "filtro_transmissao": filtro_transmissao,
         "filtro_combustivel": filtro_combustivel,
         "filtro_categoria": filtro_categoria,
@@ -69,6 +69,7 @@ def lista_carros(request):
         'user_has_permission': user_has_permission,
         'filtro_valor_diaria': filtro_valor_diaria,
     })
+
 
 
 
