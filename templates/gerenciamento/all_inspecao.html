@@ -20,7 +20,7 @@
                         <th>#</th>
                         <th>Carro</th>
                         <th>Data Última Inspeção</th>
-                        <th>Data Próxima Inspeção</th>
+                        <th>Data Próxima Revisão</th>
                         <th>Data Inspeção Obrigatória</th>
                         <th>Status</th>
                         <th>Observações</th>
@@ -32,7 +32,7 @@
                         <td>{{ forloop.counter }}</td>
                         <td>{{ inspecao.carro }}</td>
                         <td>{{ inspecao.data_ultima_inspecao }}</td>
-                        <td>{{ inspecao.data_proxima_inspecao }}</td>
+                        <td>{{ inspecao.data_proxima_revisao }}</td>
                         <td>{{ inspecao.data_proxima_inspecao_obrigatoria }}</td>
                         <td>
                             <span class="badge {% if inspecao.status == 'Aprovado' %} bg-success 

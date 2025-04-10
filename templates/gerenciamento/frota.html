@@ -19,8 +19,8 @@
                         <th>ID</th>
                         <th>Modelo</th>
                         <th>Marca</th>
-                        <th>Ano</th>
-                        <th>Inspeções</th>
+                        <th>Data Próxima Revisão</th>
+                        <th>Data Última Inspeção</th>
                         <th>Ações</th>
                     </tr>
                 </thead>
@@ -30,13 +30,25 @@
                             <td class="text-center">{{ carro.id }}</td>
                             <td>{{ carro.modelo }}</td>
                             <td>{{ carro.marca }}</td>
-                            <td class="text-center">{{ carro.ano }}</td>
+                         
+                            <td>
+                                {% if carro.inspecoes.all %}
+                                    <ul class="list-unstyled">
+                                        {% for revisoes in carro.inspecoes.all %}
+                                            {{ revisoes.data_proxima_revisao }} 
+                                        {% endfor %}    
+                                    </ul>
+                                {% else %}
+                                    <span class="text-muted">Sem data de Revisão</span>
+                                {% endif %}
+                            </td>
+                
                             <td>
                                 {% if carro.inspecoes.all %}
                                     <ul class="list-unstyled">
                                         {% for inspecao in carro.inspecoes.all %}
                                         <li>
-                                            {{ inspecao.data_proxima_inspecao }} - 
+                                            {{ inspecao.data_proxima_inspecao_obrigatoria }} - 
                                             <span class="badge 
                                                 {% if inspecao.status == 'Aprovado' %} bg-success 
                                                 {% elif inspecao.status == 'Reprovado' %} bg-danger 

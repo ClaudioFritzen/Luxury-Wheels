@@ -6,7 +6,7 @@ from django.utils import timezone
 class Inspecao(models.Model):
     carro = models.ForeignKey(Carro, on_delete=models.CASCADE, related_name='inspecoes')
     data_ultima_inspecao = models.DateField(default=timezone.now)
-    data_proxima_inspecao = models.DateField(default=timezone.now)
+    data_proxima_revisao = models.DateField(default=timezone.now)
     data_proxima_inspecao_obrigatoria = models.DateField(default=timezone.now)  # Data da próxima inspeção obrigatória
     observacoes = models.TextField(blank=True, null=True)
     status = models.CharField(
