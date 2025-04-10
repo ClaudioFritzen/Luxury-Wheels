@@ -56,39 +56,39 @@ class Carro(models.Model):
     qtd_pessoas = models.CharField(max_length=20, choices=QTD_PESSOAS, default='1-4')
 
     def atualizar_disponibilidade(self):
-        """Atualiza a disponibilidade do carro com base nas inspeções e aluguéis ativos."""
+        """Atualiza a disponibilidade do carro com base nas inspeções."""
         hoje = timezone.now().date()
         um_ano_atras = hoje - timedelta(days=365)
 
-        # Verificar se há inspeções atrasadas
         for inspecao in self.inspecoes.all():
+            # Verificar se a última inspeção ultrapassou um ano
             if inspecao.data_ultima_inspecao and inspecao.data_ultima_inspecao < um_ano_atras:
                 self.disponibilidade = False
+                print(f"Carro indisponível: Última inspeção ultrapassou um ano.")
                 self.save()
                 return
+            # Verificar se a próxima revisão está atrasada
             elif inspecao.data_proxima_revisao and inspecao.data_proxima_revisao <= hoje:
                 self.disponibilidade = False
+                print(f"Carro indisponível: Próxima revisão está atrasada.")
+                self.save()
+                return
+            # Verificar status "Pendente" para inspeções
+            elif inspecao.status == "Pendente":
+                self.disponibilidade = False
+                print(f"Carro indisponível: Inspeção está pendente.")
                 self.save()
                 return
 
-        # Verificar se há aluguéis ativos
-        if self.aluguéis.filter(status="Ativo").exists():
-            self.disponibilidade = False
-        else:
-            self.disponibilidade = True
-
-        # Salvar a alteração no banco
+        # Caso todas condições sejam atendidas
+        self.disponibilidade = True
+        print(f"Carro disponível: Todas as inspeções estão em ordem.")
         self.save()
         print(f"[DEBUG] Disponibilidade do carro ID {self.id} atualizada para {self.disponibilidade}")
 
     def __str__(self):
         return f"{self.marca} {self.modelo}"
 
-
-## Parte do banco para salvar os carros alugados e fazer o calculo entre as datas
-from django.db import models
-from django.db.models.signals import post_save
-from django.dispatch import receiver
 
 class Aluguel(models.Model):
     usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name="aluguéis")
