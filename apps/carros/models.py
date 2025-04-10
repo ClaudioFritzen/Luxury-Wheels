@@ -1,3 +1,4 @@
+from datetime import timedelta
 from django.db import models
 from django.utils import timezone
 
@@ -54,6 +55,23 @@ class Carro(models.Model):
     tipo_veiculos = models.CharField(max_length=20, choices=TIPO_VEICULOS, default='carro')
     qtd_pessoas = models.CharField(max_length=20, choices=QTD_PESSOAS, default='1-4')
 
+    def atualizar_disponibilidade(self):
+        """Atualiza a disponibilidade do carro com base nas inspeções."""
+        hoje = timezone.now().date()
+        um_ano_atras = hoje - timedelta(days=365)
+
+        for inspecao in self.inspecoes.all():
+            if inspecao.data_ultima_inspecao and inspecao.data_ultima_inspecao < um_ano_atras:
+                self.disponibilidade = False
+                self.save()
+                return
+            elif inspecao.data_proxima_revisao and inspecao.data_proxima_revisao <= hoje:
+                self.disponibilidade = False
+                self.save()
+                return
+
+        self.disponibilidade = True
+        self.save()
     def __str__(self):
         return f"{self.marca} {self.modelo}"
 

@@ -24,8 +24,14 @@ def lista_carros(request):
     filtro_qtd_pessoas = request.GET.get('qtd_pessoas')
     filtro_valor_diaria = request.GET.get('preco_diaria')
 
-    # Iniciar a query base
+    # Atualizar disponibilidade dos veículos antes de aplicar os filtros
+    for carro in Carro.objects.all():
+        carro.atualizar_disponibilidade()  # Atualiza com base nas regras de negócio
+
+    # Iniciar a query base (listar todos os carros, independentemente de disponibilidade)
     carros = Carro.objects.all()
+
+    # Verificar permissão do usuário
     user_has_permission = request.user.has_perm(
         'carros.pode_gerenciar_inspecoes')
 
@@ -41,7 +47,7 @@ def lista_carros(request):
     if filtro_qtd_pessoas:
         carros = carros.filter(qtd_pessoas=filtro_qtd_pessoas)
 
-    # <!-- Filtro de valor da diária -->
+    # Filtro de valor da diária
     if filtro_valor_diaria:
         if "-" in filtro_valor_diaria:
             min_valor, max_valor = filtro_valor_diaria.split("-")
@@ -51,7 +57,8 @@ def lista_carros(request):
         elif "+" in filtro_valor_diaria:
             min_valor = filtro_valor_diaria.replace("+", "")
             carros = carros.filter(preco_diaria__gte=min_valor)
-    # Retornar o contexto com os carros filtrados
+
+    # Retornar o contexto com todos os carros (com status de disponibilidade)
     return render(request, "carros/carros.html", {
         "carros": carros,
         "filtro_transmissao": filtro_transmissao,
@@ -61,8 +68,9 @@ def lista_carros(request):
         "filtro_qtd_pessoas": filtro_qtd_pessoas,
         'user_has_permission': user_has_permission,
         'filtro_valor_diaria': filtro_valor_diaria,
-
     })
+
+
 
 
 @login_required
