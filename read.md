@@ -1,81 +1,53 @@
-# Luxury Wheels - Sistema de Gestão de Inspeções
+🚗 Gestão de Aluguel de Veículos
+📌 Sobre o Projeto
+Este projeto é uma aplicação web para gestão de aluguel de veículos, permitindo administrar a frota, aluguéis, inspeções e revisões de forma organizada.
 
-Luxury Wheels é um sistema de gerenciamento de inspeções de veículos desenvolvido com **Python** e **Django**. Ele permite listar, criar e gerenciar inspeções, além de possuir um sistema de controle de permissões baseado no Django Admin.
+🛠 Tecnologias Utilizadas
+Django (Backend)
 
-## Tecnologias Utilizadas
-- Python 3.x
-- Django 4.x
-- Bootstrap 5 (opcional, para estilização dos templates)
-- SQLite (ou qualquer banco de dados suportado pelo Django)
+Bootstrap 5 (Frontend)
 
----
+PostgreSQL (Banco de Dados)
 
-## Configuração do Projeto
+HTML, CSS, JavaScript (Interface)
 
-### Pré-requisitos
-1. **Python**: Certifique-se de ter o Python 3.x instalado. [Download Python](https://www.python.org/downloads/)
-2. **Git**: Instale o Git se necessário. [Download Git](https://git-scm.com/)
+🔧 Instalação
+Clone o repositório:
 
-### Passo-a-Passo de Instalação
-1. Clone o repositório do projeto:
-   ```bash
-   git clone https://github.com/seu-usuario/luxury-wheels.git
-   cd luxury-wheels
+bash
+git clone https://github.com/ClaudioFritzen/Luxury-Wheels
+Acesse a pasta do projeto:
 
-### # Luxury Wheels - Sistema de Gestão de Inspeções
+bash
+cd SeuProjeto
+Crie e ative um ambiente virtual:
 
-Luxury Wheels é um sistema de gerenciamento de inspeções de veículos desenvolvido com **Python** e **Django**. Ele permite listar, criar e gerenciar inspeções, além de possuir um sistema de controle de permissões baseado no Django Admin.
-
-## Tecnologias Utilizadas
-- Python 3.x
-- Django 4.x
-- Bootstrap 5 (opcional, para estilização dos templates)
-- SQLite (ou qualquer banco de dados suportado pelo Django)
-
----
-
-## Configuração do Projeto
-
-### Pré-requisitos
-1. **Python**: Certifique-se de ter o Python 3.x instalado. [Download Python](https://www.python.org/downloads/)
-2. **Git**: Instale o Git se necessário. [Download Git](https://git-scm.com/)
-
-### Passo-a-Passo de Instalação
-1. Clone o repositório do projeto:
-   ```bash
-   git clone https://github.com/seu-usuario/luxury-wheels.git
-   cd luxury-wheels
-
-
-### Crie a ative um ambiente virtual
-
+bash
 python -m venv venv
-source venv/bin/activate  # MacOS/Linux
-venv\Scripts\activate     # Windows
+source venv/bin/activate  # Linux/Mac
+venv\Scripts\activate  # Windows
+Instale as dependências:
 
-### Instale as dependências do projeto:
-
+bash
 pip install -r requirements.txt
+Faça as migrações do banco de dados:
 
-### Faça as migrações do banco de dados:
-
-python manage.py makemigrations
+bash
 python manage.py migrate
+Crie um superusuário:
 
-### Inicie o servidor de desenvolvimento:
+bash
+python manage.py createsuperuser
+Inicie o servidor:
 
+bash
 python manage.py runserver
-Acesse o sistema no navegador: http://localhost:8000
+🚀 Funcionalidades
+✅ Cadastro e edição de veículos ✅ Gerenciamento de aluguéis ativos ✅ Controle de inspeções e revisões ✅ Relatórios de veículos mais alugados
 
-### Funcionalidades
+📄 Como Usar
+Acesse http://localhost:8000/admin para gerenciar usuários.
 
-inspeções como iremos abortar esse caso
+Utilize a interface principal para acessar veículos e aluguéis.
 
-models 
-
-pegar o id carro
-ultima_inspecao
-proxima_inspecao
-observações
-status
-
+Os relatórios ajudam a visualizar tendências de aluguel e revisões.

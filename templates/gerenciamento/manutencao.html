@@ -14,7 +14,10 @@
     <!-- Tabs Navegação -->
     <ul class="nav nav-tabs" id="veiculosTab" role="tablist">
         <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="indisponiveis-tab" data-bs-toggle="tab" data-bs-target="#indisponiveis" type="button" role="tab">Veículos Indisponíveis</button>
+            <button class="nav-link active" id="todos_veiculos-tab" data-bs-toggle="tab" data-bs-target="#todos_veiculos" type="button" role="tab">Todos os Veículos</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link " id="indisponiveis-tab" data-bs-toggle="tab" data-bs-target="#indisponiveis" type="button" role="tab">Situação Veículos</button>
         </li>
         <li class="nav-item" role="presentation">
             <button class="nav-link" id="revisao-tab" data-bs-toggle="tab" data-bs-target="#revisao" type="button" role="tab">Próxima Revisão a Expirar</button>
@@ -22,12 +25,121 @@
         <li class="nav-item" role="presentation">
             <button class="nav-link" id="inspecao-tab" data-bs-toggle="tab" data-bs-target="#inspecao" type="button" role="tab">Próxima Inspeção Obrigatória a Expirar</button>
         </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="embreve-tab" data-bs-toggle="tab" data-bs-target="#embreve" type="button" role="tab">Proxima atualização</button>
+        </li>
     </ul>
 
     <!-- Conteúdo das Tabs -->
     <div class="tab-content" id="veiculosTabContent">
-        <!-- Veículos Indisponíveis -->
-        <div class="tab-pane fade show active" id="indisponiveis" role="tabpanel" aria-labelledby="indisponiveis-tab">
+        <!-- Todos os Veículos -->
+        <div class="tab-pane fade show active " id="todos_veiculos" role="tabpanel" aria-labelledby="todos_veiculos-tab">
+            <h3 class="mt-4">Todos os Veículos</h3>
+                <table class="table table-striped">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>Modelo</th>
+                            <th>Marca</th>
+                            <th>Data da Última Inspeção</th>
+                            <th>Data Inspeção Obrigatória</th>
+                            <th>Data Próxima Revisão</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for veiculo in veiculos %}
+                            <tr>
+                                <td class="text-center">{{ veiculo.id }}</td>
+                                <td>{{ veiculo.modelo }}</td>
+                                <td>{{ veiculo.marca }}</td>
+                                <td>
+                                    {% if veiculo.inspecoes.all %}
+                                        <ul class="list-unstyled">
+                                            {% for revisoes in veiculo.inspecoes.all %}
+                                                <li>{{ revisoes.data_proxima_revisao }}</li>
+                                            {% endfor %}
+                                        <ul>
+                                    {% else %}
+                                        <span class="text-muted">Sem data de Revisão</span>
+                                    {% endif %}
+                                </td>
+                                
+                                <td>
+                                    {% if veiculo.inspecoes.all %}
+                                        <ul class="list-unstyled">
+                                            {% for inspecao in veiculo.inspecoes.all %}
+                                                <li>
+                                                    {{ inspecao.data_proxima_inspecao_obrigatoria }} - 
+                                                    <span class="badge 
+                                                        {% if inspecao.status == 'Aprovado' %} bg-success 
+                                                        {% elif inspecao.status == 'Reprovado' %} bg-danger 
+                                                        {% else %} bg-warning text-dark {% endif %}">
+                                                        {{ inspecao.status }}
+                                                    </span>
+                                                    <a href="{% url 'editar_inspecao' inspecao.id %}" class="btn btn-sm btn-primary ms-2">Editar</a>
+                                                    <a href="{% url 'excluir_inspecao' inspecao.id %}" class="btn btn-sm btn-danger ms-2">Excluir</a>
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% else %}
+                                        <span class="text-muted">Sem inspeções</span>
+                                    {% endif%}
+                                </td>
+
+                                <td class="text-center">
+                                    {% if veiculo.inspecoes.all %}
+                                        <ul class="list-unstyled">
+                                            {% for revisoes in veiculo.inspecoes.all %}
+                                                <li>{{ revisoes.data_ultima_inspecao }}</li>
+                                            {% endfor %}
+                                        <ul>
+                                    {% else %}
+                                        <span class="text-muted">Sem data de Revisão</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <a href="{% url 'lista_inspecoes' veiculo.id %}" class="btn btn-sm btn-info">Ver Inspeções</a>
+                                    <a href="{% url 'nova_inspecao' veiculo.id %}" class="btn btn-sm btn-success">Nova Inspeção</a>
+                                </td>   
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center">Nenhum veículo encontrado.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+        <!-- Veículos Alugados -->
+        <div class="tab-pane fade" id="indisponiveis" role="tabpanel" aria-labelledby="indisponiveis-tab">
+            <h3 class="mt-4"> Veículos alugados</h3>
+            {% if veiculos_alugados %}
+                <table class="table table-striped">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>Marca</th>
+                            <th>Modelo</th>
+                            <th>Dias Restantes de Aluguel</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for aluguel in veiculos_alugados %}
+                        <tr>
+                            <td>{{ aluguel.carro.id }}</td>
+                            <td>{{ aluguel.carro.marca }}</td>
+                            <td>{{ aluguel.carro.modelo }}</td>
+                            <td>{{ aluguel.dias_restantes }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div class="alert alert-warning text-center">Nenhum veículo alugado no momento.</div>
+            {% endif %}
+
             <h3 class="mt-4">Veículos Indisponíveis</h3>
             {% if veiculos_indisponiveis %}
             <table class="table table-striped">
@@ -53,6 +165,32 @@
             {% else %}
             <div class="alert alert-warning text-center">Não há veículos indisponíveis no momento.</div>
             {% endif %}
+
+            <h3 class="mt-4">Veículos Disponiveis</h3>
+            {% if veiculos_disponiveis %}
+                <table class="table table-striped">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>Marca</th>
+                            <th>Modelo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for veiculo in veiculos_disponiveis %}
+                        <tr>
+                            <td>{{ veiculo.id }}</td>
+                            <td>{{ veiculo.marca }}</td>
+                            <td>{{ veiculo.modelo }}</td>
+                            
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div class="alert alert-warning text-center">Nenhum veículo disponível no momento.</div>
+            {% endif %}
+
         </div>
 
         <!-- Próxima Revisão a Expirar -->
@@ -112,6 +250,11 @@
             <div class="alert alert-warning text-center">Nenhum veículo com inspeção próxima a expirar.</div>
             {% endif %}
         </div>
+
+        <div class="tab-pane fade" id="embreve" role="tabpanel" aria-labelledby="embreve-tab">
+            <h3 class="mt-4">Em breve </h3>
+        </div>
+
     </div>
 </div>
 

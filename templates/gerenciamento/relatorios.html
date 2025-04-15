@@ -21,7 +21,7 @@
             <button class="nav-link" id="pagamentos-tab" data-bs-toggle="tab" data-bs-target="#pagamentos" type="button" role="tab">Pagamentos</button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link" id="veiculos-tab" data-bs-toggle="tab" data-bs-target="#veiculos" type="button" role="tab">Status dos Veículos</button>
+            <button class="nav-link" id="veiculos-tab" data-bs-toggle="tab" data-bs-target="#veiculos" type="button" role="tab">Veiculos mais algudados</button>
         </li>
         <li class="nav-item" role="presentation">
             <button class="nav-link" id="grafico-tab" data-bs-toggle="tab" data-bs-target="#grafico" type="button" role="tab">Distribuição de Pagamentos</button>
@@ -29,9 +29,7 @@
         <li class="nav-item" role="presentation">
         <button class="nav-link" id="clientes-tab" data-bs-toggle="tab" data-bs-target="#clientes" type="button" role="tab">Últimos Clientes</button>
         </li>
-        <li class="nav-item" role="presentation">
-        <button class="nav-link" id="inspecoes-tab" data-bs-toggle="tab" data-bs-target="#inspecoes" type="button" role="tab">Inspeções</button>
-        </li>
+        
     </ul>
 
     <!-- Conteúdo das Abas -->
@@ -123,29 +121,33 @@
             </table>
         </div>
 
-        <!-- Status dos Veículos -->
+        <!-- Veiculo mais alugado dos Veículos -->
         <div class="tab-pane fade" id="veiculos" role="tabpanel" aria-labelledby="veiculos-tab">
-            <h3 class="mt-4">Status dos Veículos</h3>
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Marca</th>
-                        <th>Modelo</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for veiculo in veiculos_status %}
-                    <tr>
-                        <td>{{ veiculo.carro__marca }}</td>
-                        <td>{{ veiculo.carro__modelo }}</td>
-                        <td>{{ veiculo.status }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+            {% if carros_populares %}
+                <h3 class="mt-4">Top 5 Veículos Mais Alugados</h3>
+                <table class="table table-striped">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Marca</th>
+                            <th>Modelo</th>
+                            <th>Total de Aluguéis</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for carro in carros_populares %}
+                        <tr>
+                            <td>{{ carro.carro__marca }}</td>
+                            <td>{{ carro.carro__modelo }}</td>
+                            <td>{{ carro.total_alugueis }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div class="alert alert-warning text-center">Nenhum carro popular encontrado.</div>
+            {% endif %}
         </div>
-
+        
         <!-- Gráfico -->
         <div class="tab-pane fade" id="grafico" role="tabpanel" aria-labelledby="grafico-tab">
             <h3 class="mt-4">Distribuição de Pagamentos</h3>
@@ -173,26 +175,6 @@
                 </tbody>
             </table>
         </div>
-        <!-- Últimos Clientes -->
-        <div class="tab-pane fade" id="inspecoes" role="tabpanel" aria-labelledby="inspecoes-tab">
-            <h3 class="mt-4">Ver lista da Frota | Inspeção</h3>
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Ver Veiculos indisponíveis | Proxima atualizacao</th>
-                        <form method="POST" action="{% url 'frota_inspecao' %}" style="display: inline;">
-                        {% csrf_token %}
-
-                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#inspecaoModal" url="">Ver Inspeções</button>
-
-                    </form>
-                        
-                    </tr>
-                </thead>
-                
-            </table>
-        </div>
-
     </div>
 </div>
 
